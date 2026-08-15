@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible problem in Sonic Candle 2.0
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Sonic Candle 2.0.
+  - type: input
+    id: version
+    attributes:
+      label: Sonic Candle version
+      placeholder: 2.0.0-alpha.17
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system, Java, and FFmpeg versions
+    validations:
+      required: true
+  - type: dropdown
+    id: visualizer
+    attributes:
+      label: Visualizer mode
+      options: [Bars, Circular, Dual bar, Loading bar, Not applicable]
+    validations:
+      required: true
+  - type: dropdown
+    id: export
+    attributes:
+      label: Export format
+      options: [MP4, ProRes 4444, WebM VP9, PNG sequence, Preview only, Not applicable]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact actions that trigger the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostic log or additional context
+      description: Attach the relevant log from the logs folder if available. Do not include private data.

@@ -1,0 +1,11 @@
+Sonic Candle 2.0
+Copyright 2026 Sonic Candle revival contributors
+
+Based on and inspired by the original Sonic Candle project created by
+Ryan Schroeder and Chris Soderquist.
+
+Original project:
+https://github.com/ryan-schroeder/sonic-candle
+
+This distribution includes modifications and newly written components,
+including the audio analysis, FFT, FFmpeg pipeline and desktop interface.

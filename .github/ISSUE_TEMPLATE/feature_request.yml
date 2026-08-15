@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest a focused improvement that fits Sonic Candle's simple workflow
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the controls and expected preview/export result.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References or examples
+      description: Add links or screenshots if they help explain the idea.

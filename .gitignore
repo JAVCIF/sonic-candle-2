@@ -1,0 +1,11 @@
+/target/
+/dist/
+/tools/ffmpeg
+/tools/ffprobe
+/tools/ffmpeg.exe
+/tools/ffprobe.exe
+*.mp4
+*.log
+.idea/
+*.iml
+nbproject/private/

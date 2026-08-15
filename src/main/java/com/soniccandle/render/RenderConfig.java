@@ -1,0 +1,108 @@
+package com.soniccandle.render;
+
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+
+public final class RenderConfig {
+
+    private final int width;
+    private final int height;
+    private final int framesPerSecond;
+    private final Color barColor;
+    private final Color backgroundColor;
+    private final BufferedImage backgroundImage;
+    private final BarStyle barStyle;
+    private final float sensitivity;
+    private final RestingLineMode restingLineMode;
+    private final PeakMode peakMode;
+    private final VisualizationMode visualizationMode;
+    private final CircularConfig circularConfig;
+    private final boolean reverseLinearSpectrum;
+    private final DualBarConfig dualBarConfig;
+    private final LoadBarConfig loadBarConfig;
+    private final IntroAnimationConfig introAnimationConfig;
+
+    public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
+            Color backgroundColor, BufferedImage backgroundImage, BarStyle barStyle,
+            float sensitivity, RestingLineMode restingLineMode, PeakMode peakMode,
+            VisualizationMode visualizationMode, CircularConfig circularConfig) {
+        this(width, height, framesPerSecond, barColor, backgroundColor, backgroundImage,
+                barStyle, sensitivity, restingLineMode, peakMode, visualizationMode,
+                circularConfig, false, DualBarConfig.defaults(),
+                LoadBarConfig.defaults(), IntroAnimationConfig.disabled());
+    }
+
+    public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
+            Color backgroundColor, BufferedImage backgroundImage, BarStyle barStyle,
+            float sensitivity, RestingLineMode restingLineMode, PeakMode peakMode,
+            VisualizationMode visualizationMode, CircularConfig circularConfig,
+            boolean reverseLinearSpectrum, DualBarConfig dualBarConfig) {
+        this(width, height, framesPerSecond, barColor, backgroundColor, backgroundImage,
+                barStyle, sensitivity, restingLineMode, peakMode, visualizationMode,
+                circularConfig, reverseLinearSpectrum, dualBarConfig,
+                LoadBarConfig.defaults(), IntroAnimationConfig.disabled());
+    }
+
+    public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
+            Color backgroundColor, BufferedImage backgroundImage, BarStyle barStyle,
+            float sensitivity, RestingLineMode restingLineMode, PeakMode peakMode,
+            VisualizationMode visualizationMode, CircularConfig circularConfig,
+            boolean reverseLinearSpectrum, DualBarConfig dualBarConfig,
+            LoadBarConfig loadBarConfig, IntroAnimationConfig introAnimationConfig) {
+        this.width = width;
+        this.height = height;
+        this.framesPerSecond = framesPerSecond;
+        this.barColor = barColor;
+        this.backgroundColor = backgroundColor;
+        this.backgroundImage = backgroundImage;
+        this.barStyle = barStyle;
+        this.sensitivity = sensitivity;
+        this.restingLineMode = restingLineMode;
+        this.peakMode = peakMode;
+        this.visualizationMode = visualizationMode == null
+                ? VisualizationMode.LINEAR : visualizationMode;
+        this.circularConfig = circularConfig == null
+                ? CircularConfig.defaults() : circularConfig;
+        this.reverseLinearSpectrum = reverseLinearSpectrum;
+        this.dualBarConfig = dualBarConfig == null
+                ? DualBarConfig.defaults() : dualBarConfig;
+        this.loadBarConfig = loadBarConfig == null
+                ? LoadBarConfig.defaults() : loadBarConfig;
+        this.introAnimationConfig = introAnimationConfig == null
+                ? IntroAnimationConfig.disabled() : introAnimationConfig;
+    }
+
+    public int width() { return width; }
+    public int height() { return height; }
+    public int framesPerSecond() { return framesPerSecond; }
+    public Color barColor() { return barColor; }
+    public Color backgroundColor() { return backgroundColor; }
+    public BufferedImage backgroundImage() { return backgroundImage; }
+    public BarStyle barStyle() { return barStyle; }
+    public float sensitivity() { return sensitivity; }
+    public RestingLineMode restingLineMode() { return restingLineMode; }
+    public PeakMode peakMode() { return peakMode; }
+    public VisualizationMode visualizationMode() { return visualizationMode; }
+    public CircularConfig circularConfig() { return circularConfig; }
+    public boolean reverseLinearSpectrum() { return reverseLinearSpectrum; }
+    public DualBarConfig dualBarConfig() { return dualBarConfig; }
+    public LoadBarConfig loadBarConfig() { return loadBarConfig; }
+    public IntroAnimationConfig introAnimationConfig() { return introAnimationConfig; }
+
+    public boolean introAnimationApplies() {
+        if (introAnimationConfig.mode() == IntroAnimationMode.DISABLED) {
+            return false;
+        }
+        if (restingLineMode != RestingLineMode.DOTTED) {
+            return false;
+        }
+        return visualizationMode == VisualizationMode.LINEAR
+                || (visualizationMode == VisualizationMode.DUAL_BAR
+                && dualBarConfig.layout() == DualBarLayout.JOINED_CENTER);
+    }
+
+    public int introFrameCount() {
+        return introAnimationApplies()
+                ? introAnimationConfig.frameCount(framesPerSecond) : 0;
+    }
+}

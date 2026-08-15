@@ -1,0 +1,57 @@
+name: Build and test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Compile project
+        run: mvn --batch-mode --no-transfer-progress package
+
+      - name: Run core headless regressions
+        shell: bash
+        run: |
+          tests=(
+            com.soniccandle.SmokeTest
+            com.soniccandle.analysis.FrequencyDistributionProcessorTest
+            com.soniccandle.render.RendererOverflowTest
+            com.soniccandle.render.VisualOptionsTest
+            com.soniccandle.render.BarStyleRenderTest
+            com.soniccandle.render.CircularRendererTest
+            com.soniccandle.render.DualBarRendererTest
+            com.soniccandle.render.IntroAnimationRendererTest
+            com.soniccandle.render.LoadBarLevelProcessorTest
+            com.soniccandle.render.LoadBarRendererTest
+            com.soniccandle.render.TransparentRendererTest
+            com.soniccandle.render.ExportFormatTest
+            com.soniccandle.ui.PreviewTimelineTest
+            com.soniccandle.ui.SliderNumberControlTest
+            com.soniccandle.ui.UiTextTest
+            com.soniccandle.ui.SonicSliderUITest
+            com.soniccandle.ui.ThemeControlsTest
+            com.soniccandle.ui.SonicColorChooserTest
+            com.soniccandle.ui.SonicDialogsTest
+            com.soniccandle.logging.AppLoggerTest
+          )
+          for test_class in "${tests[@]}"; do
+            java -Djava.awt.headless=true \
+              -cp target/classes:target/test-classes "$test_class"
+          done
