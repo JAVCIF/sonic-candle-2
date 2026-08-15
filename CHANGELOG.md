@@ -6,6 +6,11 @@ All notable changes to Sonic Candle 2.0 are documented here.
 
 ## 2.0.0-alpha.17 — 2026-08-15
 
+- Added reproducible executable JAR and Windows EXE builds.
+- Added a NetBeans-friendly Windows packaging script based on `jpackage` and WiX 3.14.
+- The Windows installer includes a private Java runtime and can optionally bundle user-provided FFmpeg/FFprobe executables from `tools/`.
+- Added GitHub Actions automation that publishes the JAR and EXE as workflow artifacts and creates the Alpha 17 pre-release.
+- Added English and Spanish build guides, a multi-resolution Windows icon, and packaged-app FFmpeg discovery.
 - Added an output selector for MP4, ProRes 4444, WebM VP9, and PNG sequences.
 - MP4 preserves the configured background, images, fills, and complete composition.
 - ProRes 4444 provides maximum-quality transparency using `prores_ks`, the 4444 profile, and PCM audio. The interface warns that files can be very large.

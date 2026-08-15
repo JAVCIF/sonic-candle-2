@@ -28,6 +28,17 @@ public final class FFmpegLocator {
         if (environment != null && !environment.isBlank()) {
             candidates.add(Paths.get(environment));
         }
+
+        String packagedLauncher = System.getProperty("jpackage.app-path");
+        if (packagedLauncher != null && !packagedLauncher.isBlank()) {
+            Path launcherDirectory = Paths.get(packagedLauncher)
+                    .toAbsolutePath().normalize().getParent();
+            if (launcherDirectory != null) {
+                candidates.add(launcherDirectory.resolve("tools").resolve(fileName));
+                candidates.add(launcherDirectory.resolve("app")
+                        .resolve("tools").resolve(fileName));
+            }
+        }
         candidates.add(Paths.get("tools", fileName));
 
         for (Path candidate : candidates) {

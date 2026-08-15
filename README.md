@@ -6,6 +6,13 @@ An approachable Java remake and community continuation of **Sonic Candle**, buil
 
 [Leer en español](README_ES.md)
 
+## Download
+
+Download the latest Windows installer or executable JAR from [GitHub Releases](https://github.com/JAVCIF/sonic-candle-2/releases).
+
+- The **Windows EXE** includes its own Java runtime but requires FFmpeg/FFprobe in `PATH`.
+- The **executable JAR** works across platforms with Java 17 or newer and FFmpeg/FFprobe.
+
 ## Why this project exists
 
 Sonic Candle was useful because it did one job quickly: turn a song into a visualizer video. Sonic Candle 2.0 keeps that simple spirit. It is not trying to replace After Effects, Vegas, or a complete motion-graphics editor. It is meant to be the comfortable tool you open when you want a polished audio visualizer without following a long tutorial.
@@ -80,6 +87,8 @@ java -cp target/classes com.soniccandle.App
 ```
 
 The main class is `com.soniccandle.App`. NetBeans launch settings are included in `nbactions.xml`.
+
+Detailed NetBeans instructions for producing both the executable JAR and Windows EXE are available in [BUILDING.md](BUILDING.md) and [BUILDING_ES.md](BUILDING_ES.md).
 
 ## Project structure
 

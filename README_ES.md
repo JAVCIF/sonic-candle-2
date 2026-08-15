@@ -4,6 +4,15 @@ Continuación experimental de **Sonic Candle**, el generador de videos de espect
 
 Esta versión reemplaza la antigua integración con Xuggle por un pipeline basado en FFmpeg y reconstruye el análisis de audio con una FFT propia en Java. La rama 2.0 ofrece edición bilingüe, dos temas visuales y una vista previa audiovisual sincronizada.
 
+[Read in English](README.md)
+
+## Descargar
+
+Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHub Releases](https://github.com/JAVCIF/sonic-candle-2/releases).
+
+- El **EXE de Windows** incluye su propio runtime de Java, pero necesita FFmpeg/FFprobe disponibles en `PATH`.
+- El **JAR ejecutable** funciona en diferentes sistemas con Java 17 o superior y FFmpeg/FFprobe.
+
 ## Funciones incluidas
 
 - Interfaz de escritorio Swing en español e inglés.
@@ -85,13 +94,15 @@ Las pruebas sin dependencias externas están en `src/test/java`: `SmokeTest`,
 `PreviewTimelineTest`, `PreviewAudioPlayerTest`, `ThemeReferenceTest`,
 `TransparentRendererTest` y `ExportFormatTest`.
 
-También se incluye un JAR precompilado en `dist/sonic-candle-2.0.0-alpha.17.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
+Después de ejecutar **Clean and Build Project**, NetBeans crea el JAR en `target/sonic-candle-2.0.0-alpha.17.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
 
 ```text
-java -jar dist/sonic-candle-2.0.0-alpha.17.jar
+java -jar target/sonic-candle-2.0.0-alpha.17.jar
 ```
 
-El JAR sigue necesitando Java 17 y FFmpeg; todavía no es el futuro paquete portable con runtime incluido.
+El JAR necesita Java 17 y FFmpeg. El instalador EXE incluye su propio runtime de Java.
+
+Consulta [BUILDING_ES.md](BUILDING_ES.md) para generar desde NetBeans tanto el JAR ejecutable como el instalador EXE de Windows.
 
 ## Instalar FFmpeg en Windows
 

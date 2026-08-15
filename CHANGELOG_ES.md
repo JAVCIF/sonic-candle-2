@@ -2,6 +2,11 @@
 
 ## 2.0.0-alpha.17 — 2026-08-15
 
+- Compilaciones reproducibles para JAR ejecutable e instalador EXE de Windows.
+- Nuevo script de empaquetado amigable con NetBeans basado en `jpackage` y WiX 3.14.
+- El instalador incluye su propio runtime de Java y puede integrar opcionalmente los ejecutables FFmpeg/FFprobe aportados por el usuario en `tools/`.
+- Automatización de GitHub Actions que publica JAR y EXE como artefactos y crea la prerelease de Alpha 17.
+- Guías de compilación en inglés y español, icono multirresolución de Windows y detección de FFmpeg dentro de aplicaciones empaquetadas.
 - Nuevo selector de salida con MP4, ProRes 4444, WebM VP9 y secuencia PNG.
 - MP4 conserva el fondo de color o imagen, los rellenos y toda la composición configurada.
 - ProRes 4444 exporta transparencia de máxima calidad con video `prores_ks`, perfil 4444 y audio PCM; se advierte que sus archivos pueden ser muy grandes.

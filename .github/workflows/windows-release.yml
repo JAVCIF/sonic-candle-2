@@ -1,0 +1,93 @@
+name: Windows distributables
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pom.xml'
+      - 'src/**'
+      - 'packaging/**'
+      - 'package-windows.bat'
+      - '.github/workflows/windows-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package-windows:
+    runs-on: windows-2022
+    env:
+      RELEASE_TAG: v2.0.0-alpha.17
+      RELEASE_TITLE: Sonic Candle 2.0 Alpha 17
+      JAR_NAME: sonic-candle-2.0.0-alpha.17.jar
+      EXE_NAME: sonic-candle-2.0.0-alpha.17-windows-x64.exe
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Add WiX Toolset to PATH
+        shell: pwsh
+        run: |
+          $wix = "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin"
+          if (-not (Test-Path (Join-Path $wix 'candle.exe'))) {
+            throw "WiX Toolset 3.14 is not available on this runner."
+          }
+          $wix | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build executable JAR
+        run: mvn --batch-mode --no-transfer-progress clean package
+
+      - name: Build Windows EXE installer
+        shell: pwsh
+        run: ./packaging/package-windows.ps1 -SkipBuild
+
+      - name: Verify distributables
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "dist/$env:JAR_NAME")) {
+            throw "Executable JAR was not generated."
+          }
+          if (-not (Test-Path "dist/windows/$env:EXE_NAME")) {
+            throw "Windows EXE installer was not generated."
+          }
+          Get-Item "dist/$env:JAR_NAME", "dist/windows/$env:EXE_NAME" |
+            Format-Table Name, Length
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-candle-2.0-alpha17
+          if-no-files-found: error
+          path: |
+            dist/${{ env.JAR_NAME }}
+            dist/windows/${{ env.EXE_NAME }}
+
+      - name: Publish first Alpha 17 release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          gh release view $env:RELEASE_TAG *> $null
+          $releaseExists = $LASTEXITCODE -eq 0
+          $ErrorActionPreference = 'Stop'
+          if ($releaseExists) {
+            Write-Host "Release $env:RELEASE_TAG already exists; keeping its published assets unchanged."
+            exit 0
+          }
+          gh release create $env:RELEASE_TAG `
+            --target $env:GITHUB_SHA `
+            --title $env:RELEASE_TITLE `
+            --notes-file packaging/RELEASE_NOTES_ALPHA17.md `
+            --prerelease `
+            "dist/$env:JAR_NAME" `
+            "dist/windows/$env:EXE_NAME"

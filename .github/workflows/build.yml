@@ -42,6 +42,7 @@ jobs:
             com.soniccandle.render.LoadBarRendererTest
             com.soniccandle.render.TransparentRendererTest
             com.soniccandle.render.ExportFormatTest
+            com.soniccandle.ffmpeg.FFmpegLocatorTest
             com.soniccandle.ui.PreviewTimelineTest
             com.soniccandle.ui.SliderNumberControlTest
             com.soniccandle.ui.UiTextTest
