@@ -25,6 +25,7 @@ public final class UiText {
         add("section.radialFrequency", "Frecuencia radial", "Radial frequency");
         add("section.geometry", "Geometría", "Geometry");
         add("section.interior", "Interior", "Interior");
+        add("section.cardiogramTrace", "Trazo cardiográfico", "Cardiogram trace");
 
         add("button.audio", "Seleccionar audio o video…", "Select audio or video…");
         add("button.backgroundImage", "Seleccionar imagen de fondo…", "Select background image…");
@@ -57,6 +58,7 @@ public final class UiText {
         add("tab.circular", "Circular", "Circular");
         add("tab.dual", "Doble barra", "Dual bar");
         add("tab.load", "Barra de carga", "Loading bar");
+        add("tab.cardiogram", "Electrocardiógrafo", "Cardiogram");
 
         add("label.resolution", "Resolución", "Resolution");
         add("label.fps", "FPS", "FPS");
@@ -101,11 +103,19 @@ public final class UiText {
         add("label.zoom", "Zoom", "Zoom");
         add("label.positionX", "Posición X", "X position");
         add("label.positionY", "Posición Y", "Y position");
+        add("label.lineStyle", "Estilo de línea", "Line style");
+        add("label.beatMode", "Modo de latido", "Heartbeat mode");
+        add("label.sweepSpeed", "Velocidad de barrido", "Sweep speed");
 
         add("check.reverseBars", "Invertir izquierda/derecha", "Reverse left/right");
         add("check.reverseTop", "Invertir barra superior", "Reverse top bar");
         add("check.reverseBottom", "Invertir barra inferior", "Reverse bottom bar");
         add("check.reverseLoad", "Invertir llenado", "Reverse fill");
+        add("check.reverseCardiogram", "Invertir barrido izquierda/derecha",
+                "Reverse left/right sweep");
+        add("check.adaptiveCardiogramSweep",
+                "Adaptar barrido a la intensidad",
+                "Adapt sweep to intensity");
         add("note.oppositeBars", "Dos barras se ubican automáticamente en lados opuestos.",
                 "Two bars are placed automatically on opposite sides.");
         add("note.exportMp4", "Incluye el fondo y todas las imágenes configuradas.",
@@ -116,6 +126,8 @@ public final class UiText {
                 "Compressed alpha and much lighter than ProRes.");
         add("note.exportPng", "Fotogramas PNG con alfa; la secuencia no contiene audio.",
                 "PNG frames with alpha; the sequence contains no audio.");
+        add("note.cardiogramContained", "Los latidos permanecen dentro del marco y el trazo antiguo desaparece al salir.",
+                "Heartbeats remain inside the frame and old trace disappears as it exits.");
 
         add("tip.motion", "Normal conserva más inercia; Ágil reacciona antes; Rápido sigue golpes breves.",
                 "Normal keeps more inertia; Agile reacts sooner; Fast follows short hits.");
@@ -180,6 +192,18 @@ public final class UiText {
         add("tip.loadFillColor", "Selecciona el color del relleno de la barra.", "Selects the loading bar fill color.");
         add("tip.loadBorderColor", "Selecciona el color del borde, independiente del relleno.",
                 "Selects the border color independently from the fill.");
+        add("tip.cardiogramStyle", "Cambia el acabado del trazo continuo sin alterar sus latidos.",
+                "Changes the continuous trace finish without changing its beats.");
+        add("tip.cardiogramBeatMode", "Ritmo cardíaco acelera o desacelera un pulso regular según la intensidad musical; Golpes musicales dibuja un latido en cada ataque detectado.",
+                "Heart rate speeds up or slows down a regular pulse with musical intensity; Musical hits draws one heartbeat per detected attack.");
+        add("tip.cardiogramSpeed", "Cambia cuánto historial cabe en pantalla; la canción y los latidos conservan su tiempo real. Solo está disponible en Golpes musicales.",
+                "Changes how much history fits on screen; the song and beats keep their real timing. Available only for Musical hits.");
+        add("tip.cardiogramAdaptiveSweep", "Solo para Ritmo cardíaco: cambia el avance entre Normal, Rápido y Muy rápido según la intensidad, sin estirar el trazo. Al desactivarlo, queda fijo en Normal.",
+                "Heart rate only: switches trace movement among Normal, Fast, and Very fast according to intensity without stretching the trace. When disabled, it stays fixed at Normal.");
+        add("tip.cardiogramSensitivity", "Ajusta la altura de P, QRS y T sin permitir que salgan del video.",
+                "Adjusts P, QRS and T height without allowing them outside the video.");
+        add("tip.cardiogramReverse", "Hace entrar el latido nuevo por la izquierda y elimina el trazo por la derecha.",
+                "Makes the new beat enter from the left and removes old trace on the right.");
         add("tip.play", "Reproduce o pausa la vista previa con audio desde la posición del deslizador.",
                 "Plays or pauses the preview with audio from the slider position.");
         add("tip.timeline", "Haz clic o arrastra para buscar otro instante; audio e imagen se resincronizan.",
@@ -242,6 +266,7 @@ public final class UiText {
         add("dialog.dualColor", "Color de la doble barra", "Dual bar color");
         add("dialog.loadFillColor", "Color de llenado", "Fill color");
         add("dialog.loadBorderColor", "Color del borde", "Border color");
+        add("dialog.cardiogramColor", "Color del electrocardiógrafo", "Cardiogram color");
         add("dialog.backgroundColor", "Color del fondo", "Background color");
         add("dialog.circleInnerColor", "Color interior del círculo", "Circle interior color");
         add("dialog.renderComplete", "Video creado y guardado correctamente:\n%s",
@@ -357,6 +382,17 @@ public final class UiText {
         enumEn("VisualizationMode", "CIRCULAR", "Circular");
         enumEn("VisualizationMode", "DUAL_BAR", "Dual bar");
         enumEn("VisualizationMode", "LOAD_BAR", "Loading bar");
+        enumEn("VisualizationMode", "CARDIOGRAM", "Cardiogram");
+        enumEn("CardiogramSpeedMode", "SLOW", "Slow");
+        enumEn("CardiogramSpeedMode", "SYNCHRONIZED", "Synchronized");
+        enumEn("CardiogramSpeedMode", "FAST", "Fast");
+        enumEn("CardiogramBeatMode", "ADAPTIVE_HEART_RATE", "Heart rate");
+        enumEn("CardiogramBeatMode", "MUSICAL_HITS", "Musical hits");
+        enumEn("CardiogramStyle", "THIN", "Thin line");
+        enumEn("CardiogramStyle", "THICK", "Thick line");
+        enumEn("CardiogramStyle", "ROUNDED", "Rounded stroke");
+        enumEn("CardiogramStyle", "SEGMENTED", "Segmented line");
+        enumEn("CardiogramStyle", "FLUID_HALO", "Fluid halo");
     }
 
     private UiText() {

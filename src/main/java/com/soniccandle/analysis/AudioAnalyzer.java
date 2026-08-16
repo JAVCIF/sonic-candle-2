@@ -52,7 +52,8 @@ public final class AudioAnalyzer {
 
         List<String> command = List.of(
                 ffmpeg.toString(), "-v", "error", "-i", audio.toString(),
-                "-vn", "-ac", "1", "-ar", Integer.toString(SAMPLE_RATE),
+                "-map", "0:a:0", "-vn", "-ac", "1", "-ar",
+                Integer.toString(SAMPLE_RATE),
                 "-f", "f32le", "pipe:1");
 
         Process process = new ProcessBuilder(command).start();

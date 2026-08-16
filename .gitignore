@@ -7,6 +7,7 @@
 /tools/ffprobe.exe
 *.mp4
 *.log
+/logs/
 .idea/
 *.iml
 nbproject/private/

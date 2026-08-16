@@ -4,6 +4,23 @@ All notable changes to Sonic Candle 2.0 are documented here.
 
 [Historial completo en español](CHANGELOG_ES.md)
 
+## 2.0.0-alpha.19 — 2026-08-15
+
+- Added a fifth Cardiogram visualizer with music-driven P–QRS–T pulses.
+- Added a default Heart rate mode: a continuous 58–190 BPM monitor accelerates and decelerates smoothly with song intensity.
+- Retained the original per-attack behavior as Musical hits; manual sweep speed is available only in this mode and disabled for Heart rate.
+- Added an optional, default-enabled adaptive Heart rate sweep with Normal, Fast, and Very fast advance. It moves the trace itself on a fixed scale instead of resizing the full history, preventing accordion-like deformation; disabling it fixes the speed at Normal.
+- Heartbeats now use adaptive bass/onset peak detection; quiet spectrum variation cannot create unrelated pulses, and the R peak lands on the detected musical hit.
+- New heartbeats enter from the right and old trace exits on the left; the sweep can be reversed.
+- In Musical hits, Slow, Synchronized, and Fast change visible history without altering song or beat timing.
+- Added Thin, Thick, Rounded, Segmented, and Fluid Halo line finishes plus independent color and sensitivity.
+- The trace is softly contained inside a safe frame margin in preview and every export format.
+- Preview seeking and final rendering share the same precomputed temporal signal for deterministic output.
+- Added silence, pulse-shape, sweep-order, reversal, style, and containment regressions.
+- Embedded cover art is no longer classified as real video, preventing MP3/M4A artwork from becoming an unintended or stalled background stream.
+- Audio analysis and preview explicitly map the first audio stream and discard every attached picture.
+- Packaged test logs are excluded from distributable ZIP files.
+
 ## 2.0.0-alpha.18 — 2026-08-15
 
 - Added automatic FFprobe detection for audio-only, silent-video, and video-with-audio inputs.

@@ -2,7 +2,7 @@
 
 An approachable Java remake and community continuation of **Sonic Candle**, built for creating customizable music visualizers without needing a full video editor.
 
-> **Current status:** Alpha 18. The core workflow is functional, but the project is still being tested and refined.
+> **Current status:** Alpha 19. The core workflow is functional, but the project is still being tested and refined.
 
 [Leer en español](README_ES.md)
 
@@ -24,6 +24,7 @@ Sonic Candle was useful because it did one job quickly: turn a song into a visua
 - Modern blue and Classic dark/purple themes.
 - Real-time visual preview with synchronized audio, Play/Pause, and timeline seeking.
 - Audio or video input through FFmpeg. A video with embedded audio becomes both the spectrum source and background automatically.
+- Embedded album artwork is treated as audio metadata, never as a background-video stream.
 - Silent or audible background videos can be combined with a separately selected song without loading the video into memory.
 - Background-video Cover, Contain, Stretch, Loop, and Freeze-last-frame controls.
 - 720p or 1080p output at 30 or 60 FPS.
@@ -53,6 +54,10 @@ Top/bottom edge bars or joined center halves. Each half can be reversed independ
 ### Loading bar
 
 Horizontal or vertical single-level visualizer with one or two bars, reversible direction, several fill and border styles, independent colors, response modes, and temporal smoothing.
+
+### Cardiogram
+
+P–QRS–T heartbeats sweep across the frame and disappear as new beats enter. **Heart rate** is the default: it behaves like a continuous monitor whose BPM rises smoothly from a resting pulse toward tachycardia as the song becomes more intense. Its optional **Adapt sweep to intensity** control switches the trace's actual advance among Normal, Fast, and Very fast while keeping a fixed visual scale, so existing beats move faster without accordion-like stretching; turning it off keeps Normal speed. **Musical hits** remains available for placing the R peak directly on detected attacks and offers manual Slow, Synchronized, and Fast sweeps. Both modes support reversible direction, sensitivity, color, and five line finishes.
 
 ## Export formats
 

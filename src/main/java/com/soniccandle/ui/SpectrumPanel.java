@@ -17,6 +17,9 @@ public final class SpectrumPanel extends JPanel {
     private RenderConfig config;
     private int playbackFrameIndex = Integer.MAX_VALUE;
     private float loadBarLevelOverride = Float.NaN;
+    private float[] cardiogramSignal;
+    private int cardiogramFrameIndex = -1;
+    private float[] cardiogramSweepPositions;
 
     public SpectrumPanel() {
         setPreferredSize(new Dimension(720, 405));
@@ -34,10 +37,28 @@ public final class SpectrumPanel extends JPanel {
 
     public void showFrame(float[] spectrum, RenderConfig config,
             int playbackFrameIndex, float loadBarLevelOverride) {
+        showFrame(spectrum, config, playbackFrameIndex, loadBarLevelOverride,
+                null, -1, null);
+    }
+
+    public void showFrame(float[] spectrum, RenderConfig config,
+            int playbackFrameIndex, float loadBarLevelOverride,
+            float[] cardiogramSignal, int cardiogramFrameIndex) {
+        showFrame(spectrum, config, playbackFrameIndex, loadBarLevelOverride,
+                cardiogramSignal, cardiogramFrameIndex, null);
+    }
+
+    public void showFrame(float[] spectrum, RenderConfig config,
+            int playbackFrameIndex, float loadBarLevelOverride,
+            float[] cardiogramSignal, int cardiogramFrameIndex,
+            float[] cardiogramSweepPositions) {
         this.spectrum = spectrum == null ? createPlaceholder() : spectrum;
         this.config = config;
         this.playbackFrameIndex = playbackFrameIndex;
         this.loadBarLevelOverride = loadBarLevelOverride;
+        this.cardiogramSignal = cardiogramSignal;
+        this.cardiogramFrameIndex = cardiogramFrameIndex;
+        this.cardiogramSweepPositions = cardiogramSweepPositions;
         repaint();
     }
 
@@ -57,9 +78,12 @@ public final class SpectrumPanel extends JPanel {
                     config.restingLineMode(), config.peakMode(),
                     config.visualizationMode(), config.circularConfig(),
                     config.reverseLinearSpectrum(), config.dualBarConfig(),
-                    config.loadBarConfig(), config.introAnimationConfig());
+                    config.loadBarConfig(), config.introAnimationConfig(),
+                    config.cardiogramConfig());
             BufferedImage preview = new FrameRenderer(previewConfig)
-                    .render(spectrum, playbackFrameIndex, loadBarLevelOverride);
+                    .render(spectrum, playbackFrameIndex, loadBarLevelOverride,
+                            cardiogramSignal, cardiogramFrameIndex,
+                            cardiogramSweepPositions);
             g2.drawImage(preview, 0, 0, null);
         }
         g2.dispose();

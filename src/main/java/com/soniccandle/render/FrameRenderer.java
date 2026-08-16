@@ -33,15 +33,31 @@ public final class FrameRenderer {
     }
 
     public BufferedImage render(float[] spectrum) {
-        return render(spectrum, Integer.MAX_VALUE, Float.NaN);
+        return render(spectrum, Integer.MAX_VALUE, Float.NaN, null, -1,
+                null);
     }
 
     public BufferedImage render(float[] spectrum, int playbackFrameIndex) {
-        return render(spectrum, playbackFrameIndex, Float.NaN);
+        return render(spectrum, playbackFrameIndex, Float.NaN, null, -1,
+                null);
     }
 
     public BufferedImage render(float[] spectrum, int playbackFrameIndex,
             float loadBarLevelOverride) {
+        return render(spectrum, playbackFrameIndex, loadBarLevelOverride,
+                null, -1, null);
+    }
+
+    public BufferedImage render(float[] spectrum, int playbackFrameIndex,
+            float loadBarLevelOverride, float[] cardiogramSignal,
+            int cardiogramFrameIndex) {
+        return render(spectrum, playbackFrameIndex, loadBarLevelOverride,
+                cardiogramSignal, cardiogramFrameIndex, null);
+    }
+
+    public BufferedImage render(float[] spectrum, int playbackFrameIndex,
+            float loadBarLevelOverride, float[] cardiogramSignal,
+            int cardiogramFrameIndex, float[] cardiogramSweepPositions) {
         BufferedImage frame = new BufferedImage(
                 config.width(), config.height(), transparentCanvas
                         ? BufferedImage.TYPE_4BYTE_ABGR
@@ -54,7 +70,9 @@ public final class FrameRenderer {
         if (isIntroFrame(playbackFrameIndex)) {
             drawIntroAnimation(graphics, playbackFrameIndex);
         } else {
-            drawSpectrum(graphics, spectrum, loadBarLevelOverride);
+            drawSpectrum(graphics, spectrum, loadBarLevelOverride,
+                    cardiogramSignal, cardiogramFrameIndex,
+                    cardiogramSweepPositions);
         }
         graphics.dispose();
         return frame;
@@ -137,7 +155,13 @@ public final class FrameRenderer {
     }
 
     private void drawSpectrum(Graphics2D graphics, float[] spectrum,
-            float loadBarLevelOverride) {
+            float loadBarLevelOverride, float[] cardiogramSignal,
+            int cardiogramFrameIndex, float[] cardiogramSweepPositions) {
+        if (config.visualizationMode() == VisualizationMode.CARDIOGRAM) {
+            drawCardiogram(graphics, cardiogramSignal, cardiogramFrameIndex,
+                    cardiogramSweepPositions);
+            return;
+        }
         if (spectrum.length == 0) {
             return;
         }
@@ -145,8 +169,139 @@ public final class FrameRenderer {
             case CIRCULAR -> drawCircularSpectrum(graphics, spectrum);
             case DUAL_BAR -> drawDualSpectrum(graphics, spectrum);
             case LOAD_BAR -> drawLoadBars(graphics, spectrum, loadBarLevelOverride);
+            case CARDIOGRAM -> drawCardiogram(graphics, cardiogramSignal,
+                    cardiogramFrameIndex, cardiogramSweepPositions);
             case LINEAR -> drawLinearSpectrum(graphics, spectrum);
         }
+    }
+
+    private void drawCardiogram(Graphics2D graphics, float[] signal,
+            int currentFrame, float[] sweepPositions) {
+        CardiogramConfig cardiogram = config.cardiogramConfig();
+        int margin = Math.max(8, config.width() / 40);
+        int left = margin;
+        int right = Math.max(left + 1, config.width() - margin - 1);
+        int centerY = config.height() / 2;
+        double amplitudeScale = Math.max(8.0, config.height() * 0.38)
+                * Math.max(0.0f, config.sensitivity());
+        int visibleFrames = cardiogram.effectiveSpeedMode()
+                .visibleFrames(config.framesPerSecond());
+        boolean adaptiveSweep = cardiogram.usesAdaptiveSweep()
+                && sweepPositions != null && sweepPositions.length > 0
+                && currentFrame >= 0 && currentFrame < sweepPositions.length;
+        double currentSweepPosition = adaptiveSweep
+                ? sweepPositions[currentFrame] : currentFrame;
+        double initialAge = cardiogram.reverse() ? 0.0 : 1.0;
+        double initialTarget = currentSweepPosition
+                - initialAge * (visibleFrames - 1);
+        int sweepCursor = adaptiveSweep ? lowerSweepIndex(sweepPositions,
+                currentFrame, initialTarget) : Math.max(0, currentFrame);
+        Path2D path = new Path2D.Double();
+        int points = Math.max(2, right - left + 1);
+        for (int point = 0; point < points; point++) {
+            double progress = point / (double) (points - 1);
+            double ageProgress = cardiogram.reverse() ? progress : 1.0 - progress;
+            double targetPosition = currentSweepPosition
+                    - ageProgress * (visibleFrames - 1);
+            double sourceIndex;
+            if (adaptiveSweep) {
+                while (sweepCursor < currentFrame
+                        && sweepPositions[sweepCursor + 1] <= targetPosition) {
+                    sweepCursor++;
+                }
+                while (sweepCursor > 0
+                        && sweepPositions[sweepCursor] > targetPosition) {
+                    sweepCursor--;
+                }
+                sourceIndex = frameAtSweepPosition(sweepPositions,
+                        sweepCursor, currentFrame, targetPosition);
+            } else {
+                sourceIndex = targetPosition;
+            }
+            float value = CardiogramSignalProcessor.sample(signal, sourceIndex);
+            value = Math.max(-0.985f, Math.min(0.985f, value));
+            double x = left + progress * (right - left);
+            double y = centerY - value * amplitudeScale;
+            y = Math.max(margin, Math.min(config.height() - margin - 1, y));
+            if (point == 0) {
+                path.moveTo(x, y);
+            } else {
+                path.lineTo(x, y);
+            }
+        }
+
+        Graphics2D trace = (Graphics2D) graphics.create();
+        configureQuality(trace);
+        trace.setColor(config.barColor());
+        switch (cardiogram.style()) {
+            case THIN -> trace.setStroke(new BasicStroke(Math.max(1.2f,
+                    config.height() / 520f), BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_MITER));
+            case THICK -> trace.setStroke(new BasicStroke(Math.max(3.0f,
+                    config.height() / 180f), BasicStroke.CAP_SQUARE,
+                    BasicStroke.JOIN_MITER));
+            case ROUNDED -> trace.setStroke(new BasicStroke(Math.max(2.2f,
+                    config.height() / 260f), BasicStroke.CAP_ROUND,
+                    BasicStroke.JOIN_ROUND));
+            case SEGMENTED -> {
+                float width = Math.max(1.8f, config.height() / 300f);
+                float dash = Math.max(5f, config.width() / 150f);
+                trace.setStroke(new BasicStroke(width, BasicStroke.CAP_ROUND,
+                        BasicStroke.JOIN_ROUND, 10f,
+                        new float[]{dash, dash * 0.65f}, 0f));
+            }
+            case FLUID_HALO -> {
+                float base = Math.max(2.4f, config.height() / 230f);
+                trace.setComposite(AlphaComposite.SrcOver.derive(0.16f));
+                trace.setStroke(new BasicStroke(base * 5.5f,
+                        BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                trace.draw(path);
+                trace.setComposite(AlphaComposite.SrcOver.derive(0.34f));
+                trace.setStroke(new BasicStroke(base * 2.8f,
+                        BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                trace.draw(path);
+                trace.setComposite(AlphaComposite.SrcOver);
+                trace.setStroke(new BasicStroke(base, BasicStroke.CAP_ROUND,
+                        BasicStroke.JOIN_ROUND));
+            }
+        }
+        trace.draw(path);
+        trace.dispose();
+    }
+
+    private static double frameAtSweepPosition(float[] positions, int lower,
+            int maximumFrame, double target) {
+        if (target < positions[0]) {
+            return -1.0;
+        }
+        if (lower >= maximumFrame) {
+            return maximumFrame;
+        }
+        int upper = lower + 1;
+        double distance = positions[upper] - positions[lower];
+        if (distance <= 0.0) {
+            return lower;
+        }
+        double fraction = (target - positions[lower]) / distance;
+        return lower + Math.max(0.0, Math.min(1.0, fraction));
+    }
+
+    private static int lowerSweepIndex(float[] positions, int maximumFrame,
+            double target) {
+        if (target <= positions[0]) {
+            return 0;
+        }
+        int low = 0;
+        int high = maximumFrame;
+        while (low < high) {
+            int middle = (low + high + 1) >>> 1;
+            if (positions[middle] <= target) {
+                low = middle;
+            } else {
+                high = middle - 1;
+            }
+        }
+        return low;
     }
 
     private void drawLinearSpectrum(Graphics2D graphics, float[] spectrum) {

@@ -13,6 +13,12 @@ import com.soniccandle.render.BarStyle;
 import com.soniccandle.render.CircleAlignment;
 import com.soniccandle.render.CircleFillMode;
 import com.soniccandle.render.CircularConfig;
+import com.soniccandle.render.CardiogramConfig;
+import com.soniccandle.render.CardiogramBeatMode;
+import com.soniccandle.render.CardiogramSignalProcessor;
+import com.soniccandle.render.CardiogramSpeedMode;
+import com.soniccandle.render.CardiogramStyle;
+import com.soniccandle.render.CardiogramTimeline;
 import com.soniccandle.render.DualBarConfig;
 import com.soniccandle.render.DualBarLayout;
 import com.soniccandle.render.DualBarReach;
@@ -184,6 +190,18 @@ public final class MainFrame extends JFrame {
             new SliderNumberControl(40, 250, 100, 1);
     private final JButton loadBarColorButton = createColorButton(new Color(179, 127, 255));
     private final JButton loadBarBorderColorButton = createColorButton(Color.WHITE);
+    private final JComboBox<CardiogramStyle> cardiogramStyleBox =
+            new JComboBox<>(CardiogramStyle.values());
+    private final JComboBox<CardiogramBeatMode> cardiogramBeatModeBox =
+            new JComboBox<>(CardiogramBeatMode.values());
+    private final JComboBox<CardiogramSpeedMode> cardiogramSpeedBox =
+            new JComboBox<>(CardiogramSpeedMode.values());
+    private final SliderNumberControl cardiogramSensitivityControl =
+            new SliderNumberControl(40, 250, 100, 1);
+    private final JButton cardiogramColorButton =
+            createColorButton(new Color(179, 127, 255));
+    private final JCheckBox cardiogramReverseCheckBox = new JCheckBox();
+    private final JCheckBox cardiogramAdaptiveSweepCheckBox = new JCheckBox();
     private final JSlider timelineSlider = new JSlider();
     private final JButton backgroundColorButton = createColorButton(new Color(28, 18, 51));
     private final JButton audioButton = new JButton();
@@ -224,6 +242,10 @@ public final class MainFrame extends JFrame {
     private SpectrumData loadBarLevelSpectrum;
     private String loadBarLevelKey;
     private float[] loadBarLevels;
+    private SpectrumData cardiogramSignalSpectrum;
+    private CardiogramBeatMode cardiogramSignalMode;
+    private float[] cardiogramSignal;
+    private float[] cardiogramSweepPositions;
     private String analysisKey;
     private SwingWorker<Void, Integer> activeWorker;
     private final AtomicBoolean cancellationRequested = new AtomicBoolean();
@@ -266,6 +288,10 @@ public final class MainFrame extends JFrame {
         loadBarBorderStyleBox.setSelectedItem(LoadBarBorderStyle.DEFAULT);
         loadBarResponseBox.setSelectedItem(LoadBarResponseMode.NORMAL);
         loadBarAnimationBox.setSelectedItem(LoadBarAnimationMode.NORMAL);
+        cardiogramStyleBox.setSelectedItem(CardiogramStyle.ROUNDED);
+        cardiogramBeatModeBox.setSelectedItem(CardiogramBeatMode.ADAPTIVE_HEART_RATE);
+        cardiogramSpeedBox.setSelectedItem(CardiogramSpeedMode.SYNCHRONIZED);
+        cardiogramAdaptiveSweepCheckBox.setSelected(true);
         languageBox.setSelectedItem(AppLanguage.SPANISH);
         themeBox.setSelectedItem(AppTheme.MODERN);
         outputFormatBox.setSelectedItem(ExportFormat.MP4);
@@ -309,6 +335,9 @@ public final class MainFrame extends JFrame {
         setTextKey(dualReverseTopCheckBox, "check.reverseTop");
         setTextKey(dualReverseBottomCheckBox, "check.reverseBottom");
         setTextKey(loadBarReverseCheckBox, "check.reverseLoad");
+        setTextKey(cardiogramReverseCheckBox, "check.reverseCardiogram");
+        setTextKey(cardiogramAdaptiveSweepCheckBox,
+                "check.adaptiveCardiogramSweep");
 
         setTooltipKey(motionBox, "tip.motion");
         setTooltipKey(spectrumModeBox, "tip.spectrum");
@@ -349,6 +378,13 @@ public final class MainFrame extends JFrame {
         setTooltipKey(loadBarSensitivityControl, "tip.loadSensitivity");
         setTooltipKey(loadBarColorButton, "tip.loadFillColor");
         setTooltipKey(loadBarBorderColorButton, "tip.loadBorderColor");
+        setTooltipKey(cardiogramStyleBox, "tip.cardiogramStyle");
+        setTooltipKey(cardiogramBeatModeBox, "tip.cardiogramBeatMode");
+        setTooltipKey(cardiogramSpeedBox, "tip.cardiogramSpeed");
+        setTooltipKey(cardiogramAdaptiveSweepCheckBox,
+                "tip.cardiogramAdaptiveSweep");
+        setTooltipKey(cardiogramSensitivityControl, "tip.cardiogramSensitivity");
+        setTooltipKey(cardiogramReverseCheckBox, "tip.cardiogramReverse");
         setTooltipKey(playPauseButton, "tip.play");
         setTooltipKey(timelineSlider, "tip.timeline");
         setTooltipKey(outputFormatBox, "tip.outputFormat");
@@ -368,6 +404,7 @@ public final class MainFrame extends JFrame {
             loadBarHorizontalPlacementBox, loadBarVerticalPlacementBox,
             loadBarShapeBox, loadBarFillStyleBox, loadBarBorderStyleBox,
             loadBarResponseBox, loadBarAnimationBox, outputFormatBox,
+            cardiogramStyleBox, cardiogramBeatModeBox, cardiogramSpeedBox,
             backgroundFitBox, videoEndModeBox, languageBox, themeBox};
         for (JComboBox<?> box : boxes) {
             box.setRenderer(renderer);
@@ -386,6 +423,7 @@ public final class MainFrame extends JFrame {
         compositionTabs.setTitleAt(1, UiText.text("tab.circular"));
         compositionTabs.setTitleAt(2, UiText.text("tab.dual"));
         compositionTabs.setTitleAt(3, UiText.text("tab.load"));
+        compositionTabs.setTitleAt(4, UiText.text("tab.cardiogram"));
         refreshDynamicLabels();
         setStatus(statusKey, statusArguments);
         updatePlayButtonText();
@@ -544,6 +582,9 @@ public final class MainFrame extends JFrame {
         compositionTabs.addTab(UiText.text("tab.circular"), scrollableTab(createCircularTab()));
         compositionTabs.addTab(UiText.text("tab.dual"), scrollableTab(createDualBarTab()));
         compositionTabs.addTab(UiText.text("tab.load"), scrollableTab(createLoadBarTab()));
+        compositionTabs.addTab(UiText.text("tab.cardiogram"),
+                scrollableTab(createCardiogramTab()));
+        compositionTabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         compositionTabs.setSelectedIndex(0);
         compositionTabs.setPreferredSize(new Dimension(315, 365));
         panel.add(compositionTabs, nextRow(constraints));
@@ -576,6 +617,7 @@ public final class MainFrame extends JFrame {
         updateDualControls(false);
         updateBarsControls(false);
         updateLoadBarControls(false);
+        updateCardiogramControls(false);
         updateBackgroundVideoControls(false);
         return panel;
     }
@@ -671,6 +713,25 @@ public final class MainFrame extends JFrame {
         return panel;
     }
 
+    private JPanel createCardiogramTab() {
+        JPanel panel = createTabPanel();
+        GridBagConstraints constraints = createTabConstraints();
+        addSectionTitle(panel, constraints, "section.cardiogramTrace");
+        addLabeled(panel, constraints, "label.beatMode", cardiogramBeatModeBox);
+        addLabeled(panel, constraints, "label.lineStyle", cardiogramStyleBox);
+        addLabeled(panel, constraints, "label.sweepSpeed", cardiogramSpeedBox);
+        panel.add(cardiogramAdaptiveSweepCheckBox, nextRow(constraints));
+        addLabeled(panel, constraints, "label.sensitivity",
+                cardiogramSensitivityControl);
+        addLabeled(panel, constraints, "label.color", cardiogramColorButton);
+        panel.add(cardiogramReverseCheckBox, nextRow(constraints));
+        JLabel note = localizedLabel("note.cardiogramContained");
+        note.putClientProperty("sonic.role", "secondary");
+        panel.add(note, nextRow(constraints));
+        finishTab(panel, constraints);
+        return panel;
+    }
+
     private static JPanel createTabPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 8, 6));
@@ -734,6 +795,7 @@ public final class MainFrame extends JFrame {
             updateDualControls(false);
             updateBarsControls(false);
             updateLoadBarControls(false);
+            updateCardiogramControls(false);
             refreshTimelineBounds();
             updatePreview();
         });
@@ -838,6 +900,20 @@ public final class MainFrame extends JFrame {
         loadBarResponseBox.addActionListener(event -> updatePreview());
         loadBarAnimationBox.addActionListener(event -> updatePreview());
         loadBarSensitivityControl.addChangeListener(event -> updatePreview());
+        cardiogramStyleBox.addActionListener(event -> updatePreview());
+        cardiogramBeatModeBox.addActionListener(event -> {
+            cardiogramSignal = null;
+            cardiogramSweepPositions = null;
+            cardiogramSignalSpectrum = null;
+            cardiogramSignalMode = null;
+            updateCardiogramControls(false);
+            updatePreview();
+        });
+        cardiogramSpeedBox.addActionListener(event -> updatePreview());
+        cardiogramAdaptiveSweepCheckBox.addActionListener(
+                event -> updatePreview());
+        cardiogramSensitivityControl.addChangeListener(event -> updatePreview());
+        cardiogramReverseCheckBox.addActionListener(event -> updatePreview());
         barColorButton.addActionListener(event -> chooseColor(barColorButton, "dialog.barColor"));
         circleBarColorButton.addActionListener(event -> chooseColor(
                 circleBarColorButton, "dialog.circleBarColor"));
@@ -847,6 +923,8 @@ public final class MainFrame extends JFrame {
                 loadBarColorButton, "dialog.loadFillColor"));
         loadBarBorderColorButton.addActionListener(event -> chooseColor(
                 loadBarBorderColorButton, "dialog.loadBorderColor"));
+        cardiogramColorButton.addActionListener(event -> chooseColor(
+                cardiogramColorButton, "dialog.cardiogramColor"));
         outputFormatBox.addActionListener(event -> updateOutputFormat());
         backgroundFitBox.addActionListener(event -> {
             requestBackgroundVideoFrame();
@@ -1187,6 +1265,12 @@ public final class MainFrame extends JFrame {
                 (LoadBarBorderStyle) loadBarBorderStyleBox.getSelectedItem(),
                 (LoadBarResponseMode) loadBarResponseBox.getSelectedItem(),
                 (LoadBarAnimationMode) loadBarAnimationBox.getSelectedItem());
+        CardiogramConfig cardiogramConfig = new CardiogramConfig(
+                (CardiogramBeatMode) cardiogramBeatModeBox.getSelectedItem(),
+                (CardiogramSpeedMode) cardiogramSpeedBox.getSelectedItem(),
+                (CardiogramStyle) cardiogramStyleBox.getSelectedItem(),
+                cardiogramReverseCheckBox.isSelected(),
+                cardiogramAdaptiveSweepCheckBox.isSelected());
         IntroAnimationConfig introConfig = switch (mode) {
             case LINEAR -> new IntroAnimationConfig(
                     (IntroAnimationMode) barsIntroModeBox.getSelectedItem(),
@@ -1225,6 +1309,13 @@ public final class MainFrame extends JFrame {
                 restingLine = RestingLineMode.INVISIBLE;
                 peakMode = PeakMode.SOFT_LIMIT;
             }
+            case CARDIOGRAM -> {
+                visualizerColor = cardiogramColorButton.getBackground();
+                style = BarStyle.THIN;
+                sensitivity = cardiogramSensitivityControl.getValue() / 100f;
+                restingLine = RestingLineMode.DOTTED;
+                peakMode = PeakMode.SOFT_LIMIT;
+            }
             case LINEAR -> {
                 visualizerColor = barColorButton.getBackground();
                 style = (BarStyle) styleBox.getSelectedItem();
@@ -1245,7 +1336,7 @@ public final class MainFrame extends JFrame {
                 (VideoEndMode) videoEndModeBox.getSelectedItem(),
                 style, sensitivity, restingLine, peakMode,
                 mode, circularConfig, reverseBarsCheckBox.isSelected(), dualBarConfig,
-                loadBarConfig, introConfig);
+                loadBarConfig, introConfig, cardiogramConfig);
     }
 
     private void updatePreview() {
@@ -1265,7 +1356,13 @@ public final class MainFrame extends JFrame {
             float[] levels = currentLoadBarLevels(config);
             loadLevel = levels[Math.min(levels.length - 1, spectrumFrame)];
         }
-        preview.showFrame(frame, config, playbackFrame, loadLevel);
+        float[] heartSignal = null;
+        if (spectrum != null && config.visualizationMode()
+                == VisualizationMode.CARDIOGRAM) {
+            heartSignal = currentCardiogramSignal(config);
+        }
+        preview.showFrame(frame, config, playbackFrame, loadLevel,
+                heartSignal, spectrumFrame, cardiogramSweepPositions);
     }
 
     private void togglePreviewPlayback() {
@@ -1480,6 +1577,26 @@ public final class MainFrame extends JFrame {
         return loadBarLevels;
     }
 
+    private float[] currentCardiogramSignal(RenderConfig config) {
+        CardiogramBeatMode mode = config.cardiogramConfig().beatMode();
+        if (cardiogramSignal == null || cardiogramSignalSpectrum != spectrum) {
+            cacheCardiogramTimeline(config);
+            cardiogramSignalSpectrum = spectrum;
+            cardiogramSignalMode = mode;
+        } else if (cardiogramSignalMode != mode) {
+            cacheCardiogramTimeline(config);
+            cardiogramSignalMode = mode;
+        }
+        return cardiogramSignal;
+    }
+
+    private void cacheCardiogramTimeline(RenderConfig config) {
+        CardiogramTimeline timeline = CardiogramSignalProcessor.timeline(
+                spectrum, config.cardiogramConfig());
+        cardiogramSignal = timeline.signal();
+        cardiogramSweepPositions = timeline.sweepPosition();
+    }
+
     private boolean isCircularTabSelected() {
         return compositionTabs.getSelectedIndex() == 1;
     }
@@ -1492,11 +1609,16 @@ public final class MainFrame extends JFrame {
         return compositionTabs.getSelectedIndex() == 3;
     }
 
+    private boolean isCardiogramTabSelected() {
+        return compositionTabs.getSelectedIndex() == 4;
+    }
+
     private VisualizationMode selectedVisualizationMode() {
         return switch (compositionTabs.getSelectedIndex()) {
             case 1 -> VisualizationMode.CIRCULAR;
             case 2 -> VisualizationMode.DUAL_BAR;
             case 3 -> VisualizationMode.LOAD_BAR;
+            case 4 -> VisualizationMode.CARDIOGRAM;
             default -> VisualizationMode.LINEAR;
         };
     }
@@ -1542,6 +1664,10 @@ public final class MainFrame extends JFrame {
         loadBarLevels = null;
         loadBarLevelSpectrum = null;
         loadBarLevelKey = null;
+        cardiogramSignal = null;
+        cardiogramSweepPositions = null;
+        cardiogramSignalSpectrum = null;
+        cardiogramSignalMode = null;
         timelineSlider.setEnabled(false);
         playPauseButton.setEnabled(false);
         progressBar.setValue(0);
@@ -1608,6 +1734,7 @@ public final class MainFrame extends JFrame {
         updateDualControls(busy);
         updateBarsControls(busy);
         updateLoadBarControls(busy);
+        updateCardiogramControls(busy);
         updateBackgroundVideoControls(busy);
     }
 
@@ -1694,6 +1821,19 @@ public final class MainFrame extends JFrame {
         loadBarSensitivityControl.setEnabled(load);
         loadBarColorButton.setEnabled(load);
         loadBarBorderColorButton.setEnabled(load);
+    }
+
+    private void updateCardiogramControls(boolean busy) {
+        boolean cardiogram = !busy && isCardiogramTabSelected();
+        boolean musicalHits = cardiogramBeatModeBox.getSelectedItem()
+                == CardiogramBeatMode.MUSICAL_HITS;
+        cardiogramBeatModeBox.setEnabled(cardiogram);
+        cardiogramStyleBox.setEnabled(cardiogram);
+        cardiogramSpeedBox.setEnabled(cardiogram && musicalHits);
+        cardiogramAdaptiveSweepCheckBox.setEnabled(cardiogram && !musicalHits);
+        cardiogramSensitivityControl.setEnabled(cardiogram);
+        cardiogramColorButton.setEnabled(cardiogram);
+        cardiogramReverseCheckBox.setEnabled(cardiogram);
     }
 
     private void setStatusFromWorker(String key, Object... arguments) {

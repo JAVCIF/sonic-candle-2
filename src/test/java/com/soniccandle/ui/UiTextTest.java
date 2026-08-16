@@ -4,6 +4,9 @@ import com.soniccandle.analysis.FrequencyDistributionMode;
 import com.soniccandle.analysis.MotionMode;
 import com.soniccandle.analysis.SpectrumMode;
 import com.soniccandle.render.BarStyle;
+import com.soniccandle.render.CardiogramBeatMode;
+import com.soniccandle.render.CardiogramSpeedMode;
+import com.soniccandle.render.CardiogramStyle;
 import com.soniccandle.render.CircleAlignment;
 import com.soniccandle.render.CircleFillMode;
 import com.soniccandle.render.DualBarLayout;
@@ -41,7 +44,9 @@ public final class UiTextTest {
             IntroAnimationMode.values(), LoadBarAnimationMode.values(),
             LoadBarBorderStyle.values(), LoadBarFillStyle.values(),
             LoadBarOrientation.values(), LoadBarResponseMode.values(),
-            LoadBarShape.values(), PeakMode.values(), RestingLineMode.values(),
+            LoadBarShape.values(), CardiogramBeatMode.values(),
+            CardiogramSpeedMode.values(), CardiogramStyle.values(),
+            PeakMode.values(), RestingLineMode.values(),
             VisualizationMode.values()};
         for (Enum<?>[] group : groups) {
             for (Enum<?> value : group) {
@@ -60,7 +65,10 @@ public final class UiTextTest {
             "label.outputFormat", "tip.outputFormat", "note.exportMp4",
             "note.exportProRes", "note.exportWebm", "note.exportPng",
             "button.renderMp4", "button.renderProRes", "button.renderWebm",
-            "button.renderPng", "dialog.exportComplete"};
+            "button.renderPng", "dialog.exportComplete", "tab.cardiogram",
+            "label.beatMode", "tip.cardiogramBeatMode",
+            "tip.cardiogramSpeed", "check.adaptiveCardiogramSweep",
+            "tip.cardiogramAdaptiveSweep"};
         for (String key : keys) {
             assertTrue(UiText.hasText(key), "Falta una cadena bilingüe: " + key);
         }

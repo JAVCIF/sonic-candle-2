@@ -1,4 +1,4 @@
-# Sonic Candle 2.0 — Alpha 18
+# Sonic Candle 2.0 — Alpha 19
 
 Continuación experimental de **Sonic Candle**, el generador de videos de espectro musical creado originalmente por Ryan Schroeder y Chris Soderquist.
 
@@ -21,6 +21,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 - Cabecera vectorial común con el nombre Sonic Candle, vela, línea, Version 2.0-J y la firma by JavCif & Candle.
 - Proyecto Maven listo para abrir en Apache NetBeans.
 - Entrada de audio o video mediante FFmpeg. Un video con audio se usa automáticamente como fuente del espectro y como fondo.
+- Las carátulas incrustadas en MP3/M4A se ignoran como video: el audio conserva fondo negro, color, imagen o video elegido por el usuario.
 - Fondo de color, imagen PNG/JPG/BMP/GIF o video MP4/MOV/MKV/WebM/AVI/MPEG/OGV.
 - Un video silencioso puede combinarse con una canción externa; si contiene audio, su pista se ignora cuando ya existe otra fuente seleccionada.
 - Ajustes de video Cubrir, Contener o Estirar y final Repetir o Congelar último fotograma.
@@ -36,7 +37,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 - Amplitud sin techo artificial: un pico puede superar los bordes del video.
 - Picos con desborde libre o contenidos mediante un limitador suave.
 - Línea central invisible o punteada durante el reposo.
-- Pestañas independientes **Barras**, **Circular**, **Doble barra** y **Barra de carga**, con Barras seleccionada al iniciar.
+- Pestañas independientes **Barras**, **Circular**, **Doble barra**, **Barra de carga** y **Electrocardiógrafo**, con Barras seleccionada al iniciar.
 - Cada pestaña conserva su configuración visual; las opciones no se pisan al cambiar de composición.
 - Fondo, estilos, colores, sensibilidad, geometría, rotación e imagen circular actualizados en tiempo real.
 - Todos los sliders visuales combinan arrastre y campo numérico editable; la línea de tiempo queda separada.
@@ -60,6 +61,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 - Respuesta de carga Normal, Alta o Proporcional.
 - Animación Normal, Equilibrada o Suavizada con ataque y caída temporales reales.
 - Ayudas emergentes en cada control de Barra de carga: cantidad, orientación, posiciones, inversión, forma, estilos, respuesta, animación, sensibilidad y colores.
+- Electrocardiógrafo con Ritmo cardíaco adaptativo o Golpes musicales, barrido reversible y cinco estilos de línea.
 - Introducción punteada opcional de afuera hacia dentro o de dentro hacia afuera.
 - La introducción sólo puede activarse con línea punteada; ambos controles se bloquean mutuamente para impedir configuraciones incompatibles.
 - Introducción simultánea con la canción o previa con retraso real del audio.
@@ -80,7 +82,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 
 1. Descomprime el ZIP completo.
 2. En NetBeans selecciona **Archivo > Abrir proyecto**.
-3. Selecciona la carpeta `sonic-candle-2.0-alpha18`, que contiene `pom.xml`.
+3. Selecciona la carpeta `sonic-candle-2.0-alpha19`, que contiene `pom.xml`.
 4. Comprueba en las propiedades del proyecto que la plataforma Java sea JDK 17 o superior.
 5. Ejecuta el proyecto con el botón **Run**.
 
@@ -95,12 +97,13 @@ Las pruebas sin dependencias externas están en `src/test/java`: `SmokeTest`,
 `IntroAnimationRendererTest`, `IntroVideoSmokeTest`, `UiTextTest`,
 `PreviewTimelineTest`, `PreviewAudioPlayerTest`, `ThemeReferenceTest`,
 `TransparentRendererTest`, `ExportFormatTest`, `MediaProbeTest`,
-`PreviewVideoPlayerTest` y `PreviewVideoSmokeTest`.
+`PreviewVideoPlayerTest`, `PreviewVideoSmokeTest`,
+`CardiogramSignalProcessorTest` y `CardiogramRendererTest`.
 
-Después de ejecutar **Clean and Build Project**, NetBeans crea el JAR en `target/sonic-candle-2.0.0-alpha.18.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
+Después de ejecutar **Clean and Build Project**, NetBeans crea el JAR en `target/sonic-candle-2.0.0-alpha.19.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
 
 ```text
-java -jar target/sonic-candle-2.0.0-alpha.18.jar
+java -jar target/sonic-candle-2.0.0-alpha.19.jar
 ```
 
 El JAR necesita Java 17 y FFmpeg. El instalador EXE incluye su propio runtime de Java.
@@ -118,7 +121,7 @@ Sonic Candle busca `ffmpeg.exe` y `ffprobe.exe` de las siguientes maneras:
 La opción más sencilla para desarrollar es copiar ambos ejecutables desde la carpeta `bin` de una distribución de FFmpeg hacia:
 
 ```text
-sonic-candle-2.0-alpha18/
+sonic-candle-2.0-alpha19/
 └── tools/
     ├── ffmpeg.exe
     └── ffprobe.exe
@@ -161,12 +164,13 @@ Las ganancias de Equilibrado y Proporcional son constantes durante toda la canci
 - **Circular:** activa el compositor radial y muestra sus opciones de frecuencia, geometría e interior. Ya no depende de un selector escondido ni presenta sus controles bloqueados al entrar.
 - **Doble barra:** ofrece dos espectros independientes en vertical; sus ajustes se actualizan en vivo igual que los demás visualizadores.
 - **Barra de carga:** resume el nivel musical en un medidor continuo personalizable.
-- La imagen, el color o el video de fondo son globales y se actualizan en las cuatro pestañas.
+- **Electrocardiógrafo:** convierte ataques musicales en un trazo P–QRS–T que entra por un lado y desaparece por el opuesto.
+- La imagen, el color o el video de fondo son globales y se actualizan en las cinco pestañas.
 - Cambiar de pestaña, estilo, sensibilidad, color, picos, geometría, relleno, imagen, rotación o encuadre redibuja la vista previa inmediatamente.
 - Sensibilidad, rotación, zoom y posición X/Y combinan slider y número editable para recuperar valores exactos.
 - **Analizar y previsualizar** se reserva para generar o recalcular los fotogramas musicales. Los ajustes puramente visuales no repiten la FFT.
 - FPS, cantidad de bandas, Movimiento y modo de Espectro sí requieren volver a analizar porque modifican los datos musicales.
-- Las cuatro pestañas conservan configuraciones visuales independientes.
+- Las cinco pestañas conservan configuraciones visuales independientes.
 
 ## Idioma, apariencia y fondo
 
@@ -217,6 +221,20 @@ Las ganancias de Equilibrado y Proporcional son constantes durante toda la canci
 - **Animación — Suavizada:** añade más inercia para un movimiento pausado y fluido, manteniendo los mismos golpes musicales.
 - El nivel combina las bandas más activas con el pico del fotograma, respeta Movimiento, Espectro y Distribución, y permanece vacío durante el silencio.
 
+## Electrocardiógrafo
+
+- **Ritmo cardíaco** es el modo predeterminado. Mantiene un pulso regular de monitor médico: cerca de 58 BPM en reposo y acelera suavemente con la intensidad musical hasta aproximadamente 190 BPM, produciendo una apariencia de taquicardia en las partes más fuertes.
+- Este modo no intenta dibujar cada nota ni usa un tempo fijo. La energía conjunta de la canción determina gradualmente la frecuencia cardíaca.
+- **Golpes musicales** conserva la alternativa anterior: cada ataque detectado produce una silueta P–QRS–T cuyo pico R coincide con el golpe.
+- **Sincronizado** muestra un historial equilibrado. **Lento** conserva más segundos en pantalla y **Rápido** menos; estos ajustes solo se habilitan en Golpes musicales.
+- En Ritmo cardíaco el selector manual queda bloqueado. El check **Adaptar barrido a la intensidad**, activo por defecto, alterna el avance real entre Normal, Rápido y Muy rápido según la intensidad; al desactivarlo, queda fijo en Normal.
+- La escala visual permanece fija: los latidos se dibujan y desplazan más deprisa, pero el historial completo no se estira ni encoge como un acordeón.
+- Por defecto el pulso nuevo entra por la derecha y el historial sale por la izquierda. **Invertir barrido** refleja todo el recorrido.
+- Estilos Línea fina, Línea gruesa, Trazo redondeado, Línea segmentada y Halo fluido.
+- Color y sensibilidad propios. Incluso con sensibilidad máxima, el trazo queda suavemente contenido dentro de un margen seguro del video.
+- En Golpes musicales, el detector prioriza graves/bombo y usa el ataque global como respaldo; pequeñas oscilaciones continuas no crean pulsos por su cuenta.
+- La señal temporal se precalcula una sola vez y se comparte entre búsqueda, reproducción, MP4, ProRes, VP9 y PNG, de modo que el mismo instante siempre muestra el mismo latido.
+
 ## Introducción punteada
 
 Disponible en Barras y en Doble barra cuando la composición es **Mitades unidas**. Al activarla, el reposo punteado se vuelve obligatorio. Si la línea en reposo está en Invisible, el selector de introducción queda bloqueado; al habilitar una introducción, el selector de reposo queda bloqueado en Punteada.
@@ -249,7 +267,7 @@ El selector **Picos** también rige el modo circular: Normalizar mantiene la fre
 - **Picos — Normalizar picos:** no modifica amplitudes pequeñas; comprime progresivamente las grandes para aproximarlas al borde sin tocarlo ni formar una meseta plana.
 - **Espectro — Intercalado clásico:** reproduce el muestreo peculiar del Sonic Candle original, concentrado en frecuencias bajas y con una distribución más irregular. Requiere volver a analizar.
 
-## Limitaciones conocidas de Alpha 18
+## Limitaciones conocidas de Alpha 19
 
 - El análisis completo se guarda en memoria; canciones extremadamente largas consumirán más RAM.
 - La reproducción previa necesita un dispositivo de salida de audio disponible en el sistema.

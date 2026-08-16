@@ -40,6 +40,8 @@ jobs:
             com.soniccandle.render.IntroAnimationRendererTest
             com.soniccandle.render.LoadBarLevelProcessorTest
             com.soniccandle.render.LoadBarRendererTest
+            com.soniccandle.render.CardiogramSignalProcessorTest
+            com.soniccandle.render.CardiogramRendererTest
             com.soniccandle.render.TransparentRendererTest
             com.soniccandle.render.ExportFormatTest
             com.soniccandle.ffmpeg.FFmpegLocatorTest

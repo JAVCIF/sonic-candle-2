@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.0-alpha.19 — 2026-08-15
+
+- Quinta pestaña Electrocardiógrafo con pulsos musicales de silueta P–QRS–T.
+- Nuevo modo predeterminado Ritmo cardíaco: un monitor continuo de 58–190 BPM acelera y desacelera suavemente según la intensidad de la canción.
+- El comportamiento anterior se conserva como Golpes musicales; la velocidad de barrido manual solo está disponible ahí y se bloquea en Ritmo cardíaco.
+- Nuevo check **Adaptar barrido a la intensidad**, activo por defecto en Ritmo cardíaco: alterna el avance del trazo entre Normal, Rápido y Muy rápido sin reescalar el historial completo ni deformarlo como un acordeón. Al desactivarlo queda fijo en Normal.
+- Detección adaptativa de golpes mediante graves y ataques: las variaciones pequeñas del espectro no inventan latidos y el pico R cae exactamente sobre el golpe musical detectado.
+- Los latidos nuevos entran por la derecha y el historial desaparece por la izquierda; el barrido puede invertirse.
+- En Golpes musicales, Lento, Sincronizado y Rápido cambian el historial visible sin alterar el audio ni el instante de cada golpe.
+- Estilos Línea fina, Línea gruesa, Trazo redondeado, Segmentado y Halo fluido, con color y sensibilidad propios.
+- El trazo permanece contenido dentro de un margen seguro en la vista previa y todos los formatos de exportación.
+- Búsqueda en la línea de tiempo y render final comparten exactamente la misma señal temporal precalculada.
+- Pruebas nuevas de silencio, forma del pulso, velocidades, inversión, estilos y contención.
+- Las carátulas incrustadas dejan de clasificarse como video real, evitando que la portada de un MP3/M4A se active como fondo o bloquee la exportación.
+- Análisis y preview seleccionan explícitamente la primera pista de audio y descartan cualquier imagen adjunta.
+- Los registros generados por las pruebas quedan excluidos del ZIP distribuible.
+
 ## 2.0.0-alpha.18 — 2026-08-15
 
 - Detección automática mediante FFprobe de entradas con solo audio, video silencioso o video con audio.

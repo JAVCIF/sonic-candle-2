@@ -75,7 +75,7 @@ public final class PreviewAudioPlayer implements AutoCloseable {
     static List<String> command(Path ffmpeg, Path audio, double offsetSeconds) {
         return List.of(ffmpeg.toString(), "-v", "error", "-ss",
                 String.format(Locale.ROOT, "%.6f", Math.max(0.0, offsetSeconds)),
-                "-i", audio.toString(), "-vn", "-ac", "2", "-ar",
+                "-i", audio.toString(), "-map", "0:a:0", "-vn", "-ac", "2", "-ar",
                 Integer.toString(SAMPLE_RATE), "-f", "s16le", "pipe:1");
     }
 

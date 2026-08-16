@@ -25,6 +25,7 @@ public final class RenderConfig {
     private final DualBarConfig dualBarConfig;
     private final LoadBarConfig loadBarConfig;
     private final IntroAnimationConfig introAnimationConfig;
+    private final CardiogramConfig cardiogramConfig;
 
     public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
             Color backgroundColor, BufferedImage backgroundImage, BarStyle barStyle,
@@ -57,7 +58,23 @@ public final class RenderConfig {
                 backgroundImage, null, BackgroundFitMode.COVER, VideoEndMode.LOOP,
                 barStyle, sensitivity, restingLineMode, peakMode,
                 visualizationMode, circularConfig, reverseLinearSpectrum,
-                dualBarConfig, loadBarConfig, introAnimationConfig);
+                dualBarConfig, loadBarConfig, introAnimationConfig,
+                CardiogramConfig.defaults());
+    }
+
+    public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
+            Color backgroundColor, BufferedImage backgroundImage, BarStyle barStyle,
+            float sensitivity, RestingLineMode restingLineMode, PeakMode peakMode,
+            VisualizationMode visualizationMode, CircularConfig circularConfig,
+            boolean reverseLinearSpectrum, DualBarConfig dualBarConfig,
+            LoadBarConfig loadBarConfig, IntroAnimationConfig introAnimationConfig,
+            CardiogramConfig cardiogramConfig) {
+        this(width, height, framesPerSecond, barColor, backgroundColor,
+                backgroundImage, null, BackgroundFitMode.COVER, VideoEndMode.LOOP,
+                barStyle, sensitivity, restingLineMode, peakMode,
+                visualizationMode, circularConfig, reverseLinearSpectrum,
+                dualBarConfig, loadBarConfig, introAnimationConfig,
+                cardiogramConfig);
     }
 
     public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
@@ -67,7 +84,8 @@ public final class RenderConfig {
             PeakMode peakMode, VisualizationMode visualizationMode,
             CircularConfig circularConfig, boolean reverseLinearSpectrum,
             DualBarConfig dualBarConfig, LoadBarConfig loadBarConfig,
-            IntroAnimationConfig introAnimationConfig) {
+            IntroAnimationConfig introAnimationConfig,
+            CardiogramConfig cardiogramConfig) {
         this.width = width;
         this.height = height;
         this.framesPerSecond = framesPerSecond;
@@ -93,6 +111,24 @@ public final class RenderConfig {
                 ? LoadBarConfig.defaults() : loadBarConfig;
         this.introAnimationConfig = introAnimationConfig == null
                 ? IntroAnimationConfig.disabled() : introAnimationConfig;
+        this.cardiogramConfig = cardiogramConfig == null
+                ? CardiogramConfig.defaults() : cardiogramConfig;
+    }
+
+    public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
+            Color backgroundColor, BufferedImage backgroundImage, Path backgroundVideo,
+            BackgroundFitMode backgroundFitMode, VideoEndMode videoEndMode,
+            BarStyle barStyle, float sensitivity, RestingLineMode restingLineMode,
+            PeakMode peakMode, VisualizationMode visualizationMode,
+            CircularConfig circularConfig, boolean reverseLinearSpectrum,
+            DualBarConfig dualBarConfig, LoadBarConfig loadBarConfig,
+            IntroAnimationConfig introAnimationConfig) {
+        this(width, height, framesPerSecond, barColor, backgroundColor,
+                backgroundImage, backgroundVideo, backgroundFitMode, videoEndMode,
+                barStyle, sensitivity, restingLineMode, peakMode,
+                visualizationMode, circularConfig, reverseLinearSpectrum,
+                dualBarConfig, loadBarConfig, introAnimationConfig,
+                CardiogramConfig.defaults());
     }
 
     public int width() { return width; }
@@ -114,6 +150,7 @@ public final class RenderConfig {
     public DualBarConfig dualBarConfig() { return dualBarConfig; }
     public LoadBarConfig loadBarConfig() { return loadBarConfig; }
     public IntroAnimationConfig introAnimationConfig() { return introAnimationConfig; }
+    public CardiogramConfig cardiogramConfig() { return cardiogramConfig; }
 
     public boolean introAnimationApplies() {
         if (introAnimationConfig.mode() == IntroAnimationMode.DISABLED) {
