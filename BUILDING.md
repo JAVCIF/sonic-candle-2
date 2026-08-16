@@ -19,13 +19,13 @@ Native packages must be created on their target operating system. Therefore, the
 4. NetBeans runs Maven and creates:
 
    ```text
-   target/sonic-candle-2.0.0-alpha.17.jar
+   target/sonic-candle-2.0.0-alpha.18.jar
    ```
 
 5. Test it from a terminal opened in the project directory:
 
    ```text
-   java -jar target\sonic-candle-2.0.0-alpha.17.jar
+   java -jar target\sonic-candle-2.0.0-alpha.18.jar
    ```
 
 The Maven JAR plugin writes `com.soniccandle.App` into the manifest, so the package can be launched with `java -jar` or by double-clicking it when `.jar` files are associated with Java.
@@ -49,8 +49,8 @@ The generated EXE is a graphical per-user installer. It includes a private Java 
 6. The results are written to:
 
    ```text
-   dist\sonic-candle-2.0.0-alpha.17.jar
-   dist\windows\sonic-candle-2.0.0-alpha.17-windows-x64.exe
+   dist\sonic-candle-2.0.0-alpha.18.jar
+   dist\windows\sonic-candle-2.0.0-alpha.18-windows-x64.exe
    ```
 
 The installer is not code-signed, so Windows SmartScreen can show an unknown-publisher warning. A public code-signing certificate is required to remove that warning reliably.

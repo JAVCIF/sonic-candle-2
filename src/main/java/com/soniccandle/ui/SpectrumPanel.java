@@ -51,7 +51,9 @@ public final class SpectrumPanel extends JPanel {
         } else {
             RenderConfig previewConfig = new RenderConfig(
                     getWidth(), getHeight(), config.framesPerSecond(), config.barColor(),
-                    config.backgroundColor(), config.backgroundImage(), config.barStyle(), config.sensitivity(),
+                    config.backgroundColor(), config.backgroundImage(),
+                    config.backgroundVideo(), config.backgroundFitMode(),
+                    config.videoEndMode(), config.barStyle(), config.sensitivity(),
                     config.restingLineMode(), config.peakMode(),
                     config.visualizationMode(), config.circularConfig(),
                     config.reverseLinearSpectrum(), config.dualBarConfig(),

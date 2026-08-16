@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.0-alpha.18 — 2026-08-15
+
+- Detección automática mediante FFprobe de entradas con solo audio, video silencioso o video con audio.
+- El selector principal admite un video con pista incrustada y utiliza automáticamente tanto su sonido como su imagen.
+- Selector independiente de video de fondo para combinar una canción con material silencioso o descartar el audio del fondo cuando ya existe otra fuente.
+- Ajustes Cubrir, Contener y Estirar, además de los finales Repetir y Congelar último fotograma.
+- Los fondos de video se decodifican progresivamente mediante FFmpeg y nunca se almacenan completos en memoria.
+- MP4 compone el visualizador Java transparente sobre el video y conserva únicamente la fuente de audio elegida.
+- ProRes 4444, VP9 y PNG continúan omitiendo todo fondo global, incluido el video.
+- La vista previa audiovisual busca y reproduce el fondo desde la misma posición temporal que el audio.
+- Pruebas nuevas para comandos, detección de pistas, decodificación real de preview, repetición, congelado y exportación MP4 completa.
+
 ## 2.0.0-alpha.17 — 2026-08-15
 
 - Compilaciones reproducibles para JAR ejecutable e instalador EXE de Windows.

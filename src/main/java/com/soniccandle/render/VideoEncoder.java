@@ -44,7 +44,10 @@ public final class VideoEncoder {
         List<String> command = command(ffmpeg, audio, output, config, format);
         Process process = new ProcessBuilder(command).start();
         ProcessLog log = ProcessLog.drain(process.getErrorStream());
-        FrameRenderer renderer = new FrameRenderer(config, format.transparentCanvas());
+        boolean videoBackground = format == ExportFormat.MP4
+                && config.backgroundVideo() != null;
+        FrameRenderer renderer = new FrameRenderer(config,
+                format.transparentCanvas() || videoBackground);
         float[] loadBarLevels = config.visualizationMode() == VisualizationMode.LOAD_BAR
                 ? LoadBarLevelProcessor.process(spectrum, config) : null;
         boolean wasCancelled = false;
@@ -169,7 +172,10 @@ public final class VideoEncoder {
 
     static List<String> command(Path ffmpeg, Path audio, Path output,
             RenderConfig config, ExportFormat format) {
-        String inputPixelFormat = format.transparentCanvas() ? "abgr" : "bgr24";
+        boolean videoBackground = format == ExportFormat.MP4
+                && config.backgroundVideo() != null;
+        String inputPixelFormat = format.transparentCanvas() || videoBackground
+                ? "abgr" : "bgr24";
         List<String> command = new ArrayList<>(List.of(
                 ffmpeg.toString(), "-y",
                 "-f", "rawvideo", "-pixel_format", inputPixelFormat,
@@ -177,13 +183,27 @@ public final class VideoEncoder {
                 "-framerate", Integer.toString(config.framesPerSecond()),
                 "-i", "pipe:0"));
         int preRollFrames = preRollFrames(config);
+        double delaySeconds = preRollFrames / (double) config.framesPerSecond();
+        int audioInputIndex = 1;
+        if (videoBackground) {
+            if (config.videoEndMode() == VideoEndMode.LOOP) {
+                command.addAll(List.of("-stream_loop", "-1"));
+            }
+            command.addAll(List.of("-i", config.backgroundVideo().toString()));
+            audioInputIndex = 2;
+        }
         if (preRollFrames > 0) {
-            double delaySeconds = preRollFrames / (double) config.framesPerSecond();
             command.add("-itsoffset");
             command.add(String.format(Locale.ROOT, "%.6f", delaySeconds));
         }
-        command.addAll(List.of("-i", audio.toString(),
-                "-map", "0:v:0", "-map", "1:a:0"));
+        command.addAll(List.of("-i", audio.toString()));
+        if (videoBackground) {
+            command.addAll(List.of("-filter_complex",
+                    backgroundVideoFilter(config, delaySeconds),
+                    "-map", "[composed]", "-map", audioInputIndex + ":a:0"));
+        } else {
+            command.addAll(List.of("-map", "0:v:0", "-map", "1:a:0"));
+        }
         switch (format) {
             case MP4 -> command.addAll(List.of(
                     "-c:v", "libx264", "-preset", "medium", "-crf", "18",
@@ -204,6 +224,41 @@ public final class VideoEncoder {
         }
         command.add(output.toString());
         return command;
+    }
+
+    static String backgroundVideoFilter(RenderConfig config, double delaySeconds) {
+        int width = config.width();
+        int height = config.height();
+        String scale = switch (config.backgroundFitMode()) {
+            case COVER -> "scale=" + width + ":" + height
+                    + ":force_original_aspect_ratio=increase:flags=lanczos,"
+                    + "crop=" + width + ":" + height;
+            case CONTAIN -> "scale=" + width + ":" + height
+                    + ":force_original_aspect_ratio=decrease:flags=lanczos,"
+                    + "pad=" + width + ":" + height
+                    + ":(ow-iw)/2:(oh-ih)/2:color="
+                    + colorHex(config.backgroundColor());
+            case STRETCH -> "scale=" + width + ":" + height + ":flags=lanczos";
+        };
+        StringBuilder filter = new StringBuilder("[1:v]")
+                .append(scale)
+                .append(",setsar=1,fps=").append(config.framesPerSecond());
+        if (delaySeconds > 0.0) {
+            filter.append(",tpad=start_mode=clone:start_duration=")
+                    .append(String.format(Locale.ROOT, "%.6f", delaySeconds));
+        }
+        if (config.videoEndMode() == VideoEndMode.FREEZE) {
+            filter.append(",tpad=stop_mode=clone:stop_duration=86400");
+        }
+        filter.append(",drawbox=color=black@0.22:t=fill,format=rgba[background];")
+                .append("[background][0:v]overlay=0:0:format=auto:shortest=1[composed]");
+        return filter.toString();
+    }
+
+    private static String colorHex(java.awt.Color color) {
+        java.awt.Color safe = color == null ? java.awt.Color.BLACK : color;
+        return String.format(Locale.ROOT, "0x%02X%02X%02X",
+                safe.getRed(), safe.getGreen(), safe.getBlue());
     }
 
     private static int preRollFrames(RenderConfig config) {

@@ -2,7 +2,7 @@
 
 An approachable Java remake and community continuation of **Sonic Candle**, built for creating customizable music visualizers without needing a full video editor.
 
-> **Current status:** Alpha 17. The core workflow is functional, but the project is still being tested and refined.
+> **Current status:** Alpha 18. The core workflow is functional, but the project is still being tested and refined.
 
 [Leer en español](README_ES.md)
 
@@ -23,7 +23,9 @@ Sonic Candle was useful because it did one job quickly: turn a song into a visua
 - Spanish and English interface with instant language switching.
 - Modern blue and Classic dark/purple themes.
 - Real-time visual preview with synchronized audio, Play/Pause, and timeline seeking.
-- Audio input through FFmpeg: WAV, MP3, FLAC, OGG, M4A, AAC, WMA, and OPUS.
+- Audio or video input through FFmpeg. A video with embedded audio becomes both the spectrum source and background automatically.
+- Silent or audible background videos can be combined with a separately selected song without loading the video into memory.
+- Background-video Cover, Contain, Stretch, Loop, and Freeze-last-frame controls.
 - 720p or 1080p output at 30 or 60 FPS.
 - 16 to 160 logarithmic frequency bands.
 - Standard and Classic interleaved spectrum modes.
@@ -56,7 +58,7 @@ Horizontal or vertical single-level visualizer with one or two bars, reversible 
 
 | Format | Background | Transparency | Audio | Best use |
 |---|---|---|---|---|
-| MP4 (H.264) | Preserved | No | AAC | Ready-to-share complete videos |
+| MP4 (H.264) | Color, image, or streaming video preserved | No | AAC | Ready-to-share complete videos |
 | ProRes 4444 | Removed | Maximum quality | PCM | Professional editing and archival masters |
 | WebM VP9 | Removed | Compressed | Opus | Lightweight transparent overlays |
 | PNG sequence | Removed | Lossless per frame | No | Legacy workflows and maximum editor compatibility |

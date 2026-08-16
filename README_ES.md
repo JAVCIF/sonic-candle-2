@@ -1,4 +1,4 @@
-# Sonic Candle 2.0 — Alpha 17
+# Sonic Candle 2.0 — Alpha 18
 
 Continuación experimental de **Sonic Candle**, el generador de videos de espectro musical creado originalmente por Ryan Schroeder y Chris Soderquist.
 
@@ -20,8 +20,10 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 - Tema Azul moderno predeterminado y Tema clásico inspirado en la paleta carbón/púrpura de Sonic Candle 1.1.11.
 - Cabecera vectorial común con el nombre Sonic Candle, vela, línea, Version 2.0-J y la firma by JavCif & Candle.
 - Proyecto Maven listo para abrir en Apache NetBeans.
-- Audio de entrada WAV, MP3, FLAC, OGG, M4A, AAC, WMA u OPUS.
-- Fondo de color o imagen PNG/JPG/BMP/GIF.
+- Entrada de audio o video mediante FFmpeg. Un video con audio se usa automáticamente como fuente del espectro y como fondo.
+- Fondo de color, imagen PNG/JPG/BMP/GIF o video MP4/MOV/MKV/WebM/AVI/MPEG/OGV.
+- Un video silencioso puede combinarse con una canción externa; si contiene audio, su pista se ignora cuando ya existe otra fuente seleccionada.
+- Ajustes de video Cubrir, Contener o Estirar y final Repetir o Congelar último fotograma.
 - Previsualización navegable por la línea de tiempo.
 - Reproductor de vista previa con Play/Pausa, audio real, búsqueda mediante slider y reloj visible.
 - Sincronización dirigida por el audio, compatible con introducciones simultáneas o previas a la canción.
@@ -78,7 +80,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 
 1. Descomprime el ZIP completo.
 2. En NetBeans selecciona **Archivo > Abrir proyecto**.
-3. Selecciona la carpeta `sonic-candle-2.0-alpha17`, que contiene `pom.xml`.
+3. Selecciona la carpeta `sonic-candle-2.0-alpha18`, que contiene `pom.xml`.
 4. Comprueba en las propiedades del proyecto que la plataforma Java sea JDK 17 o superior.
 5. Ejecuta el proyecto con el botón **Run**.
 
@@ -92,12 +94,13 @@ Las pruebas sin dependencias externas están en `src/test/java`: `SmokeTest`,
 `DualBarRendererTest`, `LoadBarRendererTest`, `LoadBarLevelProcessorTest`,
 `IntroAnimationRendererTest`, `IntroVideoSmokeTest`, `UiTextTest`,
 `PreviewTimelineTest`, `PreviewAudioPlayerTest`, `ThemeReferenceTest`,
-`TransparentRendererTest` y `ExportFormatTest`.
+`TransparentRendererTest`, `ExportFormatTest`, `MediaProbeTest`,
+`PreviewVideoPlayerTest` y `PreviewVideoSmokeTest`.
 
-Después de ejecutar **Clean and Build Project**, NetBeans crea el JAR en `target/sonic-candle-2.0.0-alpha.17.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
+Después de ejecutar **Clean and Build Project**, NetBeans crea el JAR en `target/sonic-candle-2.0.0-alpha.18.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
 
 ```text
-java -jar target/sonic-candle-2.0.0-alpha.17.jar
+java -jar target/sonic-candle-2.0.0-alpha.18.jar
 ```
 
 El JAR necesita Java 17 y FFmpeg. El instalador EXE incluye su propio runtime de Java.
@@ -115,7 +118,7 @@ Sonic Candle busca `ffmpeg.exe` y `ffprobe.exe` de las siguientes maneras:
 La opción más sencilla para desarrollar es copiar ambos ejecutables desde la carpeta `bin` de una distribución de FFmpeg hacia:
 
 ```text
-sonic-candle-2.0-alpha17/
+sonic-candle-2.0-alpha18/
 └── tools/
     ├── ffmpeg.exe
     └── ffprobe.exe
@@ -125,14 +128,15 @@ Los archivos DLL exigidos por la distribución de FFmpeg deben copiarse también
 
 ## Flujo interno
 
-1. FFmpeg decodifica cualquier audio compatible a PCM mono de 44.100 Hz.
-2. Java aplica una ventana Hann y una FFT radix-2 de 2.048 o 4.096 muestras.
-3. El modo Estándar agrupa bandas logarítmicas entre 45 Hz y 16 kHz; el modo Intercalado reproduce el recorrido de datos FFT del programa original.
-4. Se descarta el piso de ruido y se calibra con un percentil robusto.
-5. El modo de movimiento determina la resolución temporal y la velocidad de ataque/caída sin modificar el audio.
-6. Java2D genera fotogramas BGR para MP4 o ABGR con alfa para las exportaciones transparentes.
-7. Los fotogramas se envían por tubería a FFmpeg.
-8. FFmpeg agrega el audio original y produce MP4, ProRes 4444 o WebM VP9; la secuencia PNG se escribe directamente sin audio.
+1. FFprobe detecta automáticamente si la entrada contiene audio, video o ambas pistas.
+2. FFmpeg decodifica la pista de audio compatible a PCM mono de 44.100 Hz.
+3. Java aplica una ventana Hann y una FFT radix-2 de 2.048 o 4.096 muestras.
+4. El modo Estándar agrupa bandas logarítmicas entre 45 Hz y 16 kHz; el modo Intercalado reproduce el recorrido de datos FFT del programa original.
+5. Se descarta el piso de ruido y se calibra con un percentil robusto.
+6. El modo de movimiento determina la resolución temporal y la velocidad de ataque/caída sin modificar el audio.
+7. Java2D genera fotogramas BGR para fondos estáticos o ABGR con alfa para fondos de video y exportaciones transparentes.
+8. Los fotogramas se envían por tubería a FFmpeg. El fondo de video se decodifica y descarta progresivamente, sin almacenarlo completo en RAM.
+9. FFmpeg agrega el audio original y produce MP4, ProRes 4444 o WebM VP9; la secuencia PNG se escribe directamente sin audio.
 
 ## Modos de movimiento
 
@@ -157,7 +161,7 @@ Las ganancias de Equilibrado y Proporcional son constantes durante toda la canci
 - **Circular:** activa el compositor radial y muestra sus opciones de frecuencia, geometría e interior. Ya no depende de un selector escondido ni presenta sus controles bloqueados al entrar.
 - **Doble barra:** ofrece dos espectros independientes en vertical; sus ajustes se actualizan en vivo igual que los demás visualizadores.
 - **Barra de carga:** resume el nivel musical en un medidor continuo personalizable.
-- La imagen o el color de fondo son globales y se actualizan inmediatamente en las cuatro pestañas.
+- La imagen, el color o el video de fondo son globales y se actualizan en las cuatro pestañas.
 - Cambiar de pestaña, estilo, sensibilidad, color, picos, geometría, relleno, imagen, rotación o encuadre redibuja la vista previa inmediatamente.
 - Sensibilidad, rotación, zoom y posición X/Y combinan slider y número editable para recuperar valores exactos.
 - **Analizar y previsualizar** se reserva para generar o recalcular los fotogramas musicales. Los ajustes puramente visuales no repiten la FFT.
@@ -171,7 +175,10 @@ Las ganancias de Equilibrado y Proporcional son constantes durante toda la canci
 - **Tema clásico:** recrea el ambiente oscuro del Sonic Candle original con carbón, blanco y acentos púrpura.
 - Ambos temas comparten el mismo logotipo vectorial y la identificación **Version 2.0-J — by JavCif & Candle**.
 - La sección Archivos muestra el nombre real del recurso elegido bajo **Seleccionar imagen de fondo**; ya no confunde una imagen ausente con el texto Color sólido.
-- **Usar color como fondo** selecciona un color y desactiva la imagen actual. El estado inferior indica claramente **Color sólido activo** o **Imagen de fondo activa**.
+- **Usar color como fondo** selecciona un color y desactiva la imagen o video actual. El estado inferior distingue **Color sólido**, **Imagen** y **Video de fondo activo**.
+- **Seleccionar audio o video** acepta un videoclip con pista incrustada sin exigir una extracción manual. Si la entrada posee ambas pistas, el video se activa también como fondo.
+- **Seleccionar video de fondo** admite material silencioso o con audio. Una canción seleccionada por separado siempre tiene prioridad y la pista del fondo se descarta.
+- Los fondos de video se previsualizan desde el punto actual del slider y se reproducen por streaming junto con la canción.
 
 ## Vista previa audiovisual
 
@@ -242,7 +249,7 @@ El selector **Picos** también rige el modo circular: Normalizar mantiene la fre
 - **Picos — Normalizar picos:** no modifica amplitudes pequeñas; comprime progresivamente las grandes para aproximarlas al borde sin tocarlo ni formar una meseta plana.
 - **Espectro — Intercalado clásico:** reproduce el muestreo peculiar del Sonic Candle original, concentrado en frecuencias bajas y con una distribución más irregular. Requiere volver a analizar.
 
-## Limitaciones conocidas de Alpha 17
+## Limitaciones conocidas de Alpha 18
 
 - El análisis completo se guarda en memoria; canciones extremadamente largas consumirán más RAM.
 - La reproducción previa necesita un dispositivo de salida de audio disponible en el sistema.

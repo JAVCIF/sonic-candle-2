@@ -43,7 +43,10 @@ jobs:
             com.soniccandle.render.TransparentRendererTest
             com.soniccandle.render.ExportFormatTest
             com.soniccandle.ffmpeg.FFmpegLocatorTest
+            com.soniccandle.ffmpeg.MediaProbeTest
             com.soniccandle.ui.PreviewTimelineTest
+            com.soniccandle.ui.PreviewAudioPlayerTest
+            com.soniccandle.ui.PreviewVideoPlayerTest
             com.soniccandle.ui.SliderNumberControlTest
             com.soniccandle.ui.UiTextTest
             com.soniccandle.ui.SonicSliderUITest

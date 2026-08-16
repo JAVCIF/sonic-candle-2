@@ -5,7 +5,10 @@ import com.soniccandle.analysis.FrequencyDistributionMode;
 import com.soniccandle.analysis.MotionMode;
 import com.soniccandle.analysis.SpectrumData;
 import com.soniccandle.analysis.SpectrumMode;
+import com.soniccandle.ffmpeg.MediaInfo;
+import com.soniccandle.ffmpeg.MediaProbe;
 import com.soniccandle.logging.AppLogger;
+import com.soniccandle.render.BackgroundFitMode;
 import com.soniccandle.render.BarStyle;
 import com.soniccandle.render.CircleAlignment;
 import com.soniccandle.render.CircleFillMode;
@@ -31,6 +34,7 @@ import com.soniccandle.render.PeakMode;
 import com.soniccandle.render.RenderConfig;
 import com.soniccandle.render.RestingLineMode;
 import com.soniccandle.render.VideoEncoder;
+import com.soniccandle.render.VideoEndMode;
 import com.soniccandle.render.VerticalPlacement;
 import com.soniccandle.render.VisualizationMode;
 import java.awt.BorderLayout;
@@ -184,6 +188,11 @@ public final class MainFrame extends JFrame {
     private final JButton backgroundColorButton = createColorButton(new Color(28, 18, 51));
     private final JButton audioButton = new JButton();
     private final JButton backgroundButton = new JButton();
+    private final JButton backgroundVideoButton = new JButton();
+    private final JComboBox<BackgroundFitMode> backgroundFitBox =
+            new JComboBox<>(BackgroundFitMode.values());
+    private final JComboBox<VideoEndMode> videoEndModeBox =
+            new JComboBox<>(VideoEndMode.values());
     private final JComboBox<ExportFormat> outputFormatBox =
             new JComboBox<>(ExportFormat.values());
     private final JButton outputButton = new JButton();
@@ -199,12 +208,16 @@ public final class MainFrame extends JFrame {
     private final JProgressBar progressBar = new JProgressBar(0, 100);
     private final JLabel statusLabel = new JLabel();
     private final PreviewAudioPlayer previewAudioPlayer = new PreviewAudioPlayer();
+    private final PreviewVideoPlayer previewVideoPlayer = new PreviewVideoPlayer();
     private final Timer playbackTimer = new Timer(15, event -> advancePreviewPlayback());
 
     private Path audioPath;
     private Path backgroundPath;
+    private Path backgroundVideoPath;
+    private double backgroundVideoDuration = -1.0;
     private Path outputPath;
     private BufferedImage backgroundImage;
+    private BufferedImage backgroundVideoFrame;
     private Path circleImagePath;
     private BufferedImage circleImage;
     private SpectrumData spectrum;
@@ -256,6 +269,8 @@ public final class MainFrame extends JFrame {
         languageBox.setSelectedItem(AppLanguage.SPANISH);
         themeBox.setSelectedItem(AppTheme.MODERN);
         outputFormatBox.setSelectedItem(ExportFormat.MP4);
+        backgroundFitBox.setSelectedItem(BackgroundFitMode.COVER);
+        videoEndModeBox.setSelectedItem(VideoEndMode.LOOP);
         configureLocalizationMetadata();
         configureComboRenderers();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -272,6 +287,7 @@ public final class MainFrame extends JFrame {
             public void windowClosing(WindowEvent event) {
                 stopPreviewPlayback(false);
                 previewAudioPlayer.close();
+                previewVideoPlayer.close();
                 AppLogger.shutdown();
             }
         });
@@ -282,6 +298,7 @@ public final class MainFrame extends JFrame {
     private void configureLocalizationMetadata() {
         setTextKey(audioButton, "button.audio");
         setTextKey(backgroundButton, "button.backgroundImage");
+        setTextKey(backgroundVideoButton, "button.backgroundVideo");
         setTextKey(backgroundColorButton, "button.backgroundColor");
         setTextKey(outputButton, "button.output");
         setTextKey(analyzeButton, "button.analyze");
@@ -335,6 +352,9 @@ public final class MainFrame extends JFrame {
         setTooltipKey(playPauseButton, "tip.play");
         setTooltipKey(timelineSlider, "tip.timeline");
         setTooltipKey(outputFormatBox, "tip.outputFormat");
+        setTooltipKey(backgroundVideoButton, "tip.backgroundVideo");
+        setTooltipKey(backgroundFitBox, "tip.backgroundFit");
+        setTooltipKey(videoEndModeBox, "tip.videoEnd");
     }
 
     private void configureComboRenderers() {
@@ -348,7 +368,7 @@ public final class MainFrame extends JFrame {
             loadBarHorizontalPlacementBox, loadBarVerticalPlacementBox,
             loadBarShapeBox, loadBarFillStyleBox, loadBarBorderStyleBox,
             loadBarResponseBox, loadBarAnimationBox, outputFormatBox,
-            languageBox, themeBox};
+            backgroundFitBox, videoEndModeBox, languageBox, themeBox};
         for (JComboBox<?> box : boxes) {
             box.setRenderer(renderer);
         }
@@ -405,7 +425,8 @@ public final class MainFrame extends JFrame {
                 ? UiText.text("state.noBackgroundImage")
                 : backgroundPath.getFileName().toString());
         backgroundLabel.setToolTipText(backgroundPath == null ? null : backgroundPath.toString());
-        backgroundModeLabel.setText(UiText.text(backgroundImage == null
+        backgroundModeLabel.setText(UiText.text(backgroundVideoPath != null
+                ? "state.videoBackground" : backgroundImage == null
                 ? "state.solidBackground" : "state.imageBackground"));
         outputLabel.setText(outputPath == null ? UiText.text("state.noOutput")
                 : outputPath.getFileName().toString());
@@ -499,6 +520,9 @@ public final class MainFrame extends JFrame {
 
         panel.add(backgroundButton, nextRow(constraints));
         panel.add(shortLabel(backgroundLabel), nextRow(constraints));
+        panel.add(backgroundVideoButton, nextRow(constraints));
+        addLabeled(panel, constraints, "label.backgroundFit", backgroundFitBox);
+        addLabeled(panel, constraints, "label.videoEnd", videoEndModeBox);
         panel.add(backgroundColorButton, nextRow(constraints));
         panel.add(shortLabel(backgroundModeLabel), nextRow(constraints));
 
@@ -545,12 +569,14 @@ public final class MainFrame extends JFrame {
 
         audioButton.addActionListener(event -> selectAudio());
         backgroundButton.addActionListener(event -> selectBackground());
+        backgroundVideoButton.addActionListener(event -> selectBackgroundVideo());
         circleImageButton.addActionListener(event -> selectCircleImage());
         outputButton.addActionListener(event -> selectOutput());
         updateCircularControls(false);
         updateDualControls(false);
         updateBarsControls(false);
         updateLoadBarControls(false);
+        updateBackgroundVideoControls(false);
         return panel;
     }
 
@@ -692,6 +718,9 @@ public final class MainFrame extends JFrame {
             if (previewPlaying && !updatingTimelineFromPlayback
                     && !timelineSlider.getValueIsAdjusting()) {
                 restartPreviewPlayback();
+            } else if (!previewPlaying && !updatingTimelineFromPlayback
+                    && !timelineSlider.getValueIsAdjusting()) {
+                requestBackgroundVideoFrame();
             }
         });
         languageBox.addActionListener(event -> applyLanguage());
@@ -708,7 +737,10 @@ public final class MainFrame extends JFrame {
             refreshTimelineBounds();
             updatePreview();
         });
-        resolutionBox.addActionListener(event -> updatePreview());
+        resolutionBox.addActionListener(event -> {
+            requestBackgroundVideoFrame();
+            updatePreview();
+        });
         fpsBox.addActionListener(event -> invalidateAnalysis());
         bandsSpinner.addChangeListener(event -> invalidateAnalysis());
         motionBox.addActionListener(event -> invalidateAnalysis());
@@ -816,6 +848,11 @@ public final class MainFrame extends JFrame {
         loadBarBorderColorButton.addActionListener(event -> chooseColor(
                 loadBarBorderColorButton, "dialog.loadBorderColor"));
         outputFormatBox.addActionListener(event -> updateOutputFormat());
+        backgroundFitBox.addActionListener(event -> {
+            requestBackgroundVideoFrame();
+            updatePreview();
+        });
+        videoEndModeBox.addActionListener(event -> updatePreview());
         backgroundColorButton.addActionListener(event -> chooseBackgroundColor());
         circleColorButton.addActionListener(event -> chooseColor(
                 circleColorButton, "dialog.circleInnerColor"));
@@ -933,15 +970,39 @@ public final class MainFrame extends JFrame {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle(UiText.text("dialog.audio"));
         chooser.setFileFilter(new FileNameExtensionFilter(
-                UiText.text("filter.audio"), "wav", "mp3", "flac", "ogg", "oga", "m4a", "aac", "wma", "opus"));
+                UiText.text("filter.media"), "wav", "mp3", "flac", "ogg", "oga",
+                "m4a", "aac", "wma", "opus", "mp4", "m4v", "mov", "mkv",
+                "webm", "avi", "mpg", "mpeg", "ogv"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            stopPreviewPlayback(false);
-            audioPath = chooser.getSelectedFile().toPath();
-            if (outputPath == null) {
-                outputPath = suggestedOutputPath();
+            Path selected = chooser.getSelectedFile().toPath();
+            try {
+                MediaInfo info = MediaProbe.probe(selected);
+                if (!info.hasAudio()) {
+                    if (info.hasVideo()) {
+                        activateBackgroundVideo(selected, info);
+                        if (audioPath == null) {
+                            showError(UiText.text("error.videoNeedsAudio"));
+                        }
+                        return;
+                    }
+                    throw new IOException(UiText.text("error.mediaNoAudio"));
+                }
+                stopPreviewPlayback(false);
+                audioPath = selected;
+                if (info.hasVideo()) {
+                    activateBackgroundVideo(selected, info);
+                }
+                if (outputPath == null) {
+                    outputPath = suggestedOutputPath();
+                }
+                refreshDynamicLabels();
+                invalidateAnalysis();
+            } catch (IOException exception) {
+                showError(UiText.format("error.openMedia", exception.getMessage()), exception);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                showError(UiText.text("error.interrupted"), exception);
             }
-            refreshDynamicLabels();
-            invalidateAnalysis();
         }
     }
 
@@ -958,13 +1019,63 @@ public final class MainFrame extends JFrame {
                 }
                 backgroundPath = chooser.getSelectedFile().toPath();
                 backgroundImage = selected;
+                backgroundVideoPath = null;
+                backgroundVideoDuration = -1.0;
+                backgroundVideoFrame = null;
+                previewVideoPlayer.stop();
                 refreshDynamicLabels();
+                updateBackgroundVideoControls(false);
                 updatePreview();
             } catch (IOException exception) {
                 showError(UiText.format("error.openBackground", exception.getMessage()),
                         exception);
             }
         }
+    }
+
+    private void selectBackgroundVideo() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle(UiText.text("dialog.backgroundVideo"));
+        chooser.setFileFilter(new FileNameExtensionFilter(
+                UiText.text("filter.videos"), "mp4", "m4v", "mov", "mkv",
+                "webm", "avi", "mpg", "mpeg", "ogv"));
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            Path selected = chooser.getSelectedFile().toPath();
+            try {
+                MediaInfo info = MediaProbe.probe(selected);
+                if (!info.hasVideo()) {
+                    throw new IOException(UiText.text("error.mediaNoVideo"));
+                }
+                activateBackgroundVideo(selected, info);
+                if (audioPath == null && info.hasAudio()) {
+                    audioPath = selected;
+                    if (outputPath == null) {
+                        outputPath = suggestedOutputPath();
+                    }
+                    invalidateAnalysis();
+                } else if (audioPath == null) {
+                    showError(UiText.text("error.videoNeedsAudio"));
+                }
+                refreshDynamicLabels();
+            } catch (IOException exception) {
+                showError(UiText.format("error.openMedia", exception.getMessage()), exception);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                showError(UiText.text("error.interrupted"), exception);
+            }
+        }
+    }
+
+    private void activateBackgroundVideo(Path selected, MediaInfo info) {
+        stopPreviewPlayback(false);
+        backgroundPath = selected;
+        backgroundVideoPath = selected;
+        backgroundVideoDuration = info == null ? -1.0 : info.durationSeconds();
+        backgroundImage = null;
+        backgroundVideoFrame = null;
+        refreshDynamicLabels();
+        updateBackgroundVideoControls(false);
+        requestBackgroundVideoFrame();
     }
 
     private void selectCircleImage() {
@@ -1127,7 +1238,11 @@ public final class MainFrame extends JFrame {
         return new RenderConfig(
                 dimensions[0], dimensions[1], selectedFps(),
                 visualizerColor,
-                backgroundColorButton.getBackground(), backgroundImage,
+                backgroundColorButton.getBackground(),
+                backgroundVideoPath == null ? backgroundImage : backgroundVideoFrame,
+                backgroundVideoPath,
+                (BackgroundFitMode) backgroundFitBox.getSelectedItem(),
+                (VideoEndMode) videoEndModeBox.getSelectedItem(),
                 style, sensitivity, restingLine, peakMode,
                 mode, circularConfig, reverseBarsCheckBox.isSelected(), dualBarConfig,
                 loadBarConfig, introConfig);
@@ -1178,8 +1293,12 @@ public final class MainFrame extends JFrame {
         previewPlaying = true;
         if (PreviewTimeline.audioShouldBeActive(
                 playbackStartFrame, playbackPreRollFrames)) {
-            startPreviewAudio(PreviewTimeline.audioOffsetSeconds(
-                    playbackStartFrame, playbackPreRollFrames, selectedFps()));
+            double offset = PreviewTimeline.audioOffsetSeconds(
+                    playbackStartFrame, playbackPreRollFrames, selectedFps());
+            startPreviewAudio(offset);
+            startPreviewVideo(offset);
+        } else {
+            requestBackgroundVideoFrame();
         }
         playbackTimer.start();
         updatePlayButtonText();
@@ -1192,6 +1311,7 @@ public final class MainFrame extends JFrame {
         }
         playbackTimer.stop();
         previewAudioPlayer.stop();
+        previewVideoPlayer.stop();
         previewPlaying = false;
         startPreviewPlayback();
     }
@@ -1210,6 +1330,30 @@ public final class MainFrame extends JFrame {
                 }));
     }
 
+    private void startPreviewVideo(double offsetSeconds) {
+        Path video = backgroundVideoPath;
+        if (video == null) {
+            return;
+        }
+        VideoEndMode endMode = (VideoEndMode) videoEndModeBox.getSelectedItem();
+        if (endMode == VideoEndMode.FREEZE && backgroundVideoDuration > 0.0
+                && offsetSeconds >= backgroundVideoDuration) {
+            requestBackgroundVideoFrame();
+            return;
+        }
+        double videoOffset = normalizedVideoOffset(offsetSeconds, endMode);
+        previewVideoPlayer.play(video, videoOffset,
+                Math.max(2, preview.getWidth()), Math.max(2, preview.getHeight()),
+                selectedFps(), (BackgroundFitMode) backgroundFitBox.getSelectedItem(),
+                backgroundColorButton.getBackground(), endMode,
+                frame -> SwingUtilities.invokeLater(() -> {
+                    if (video.equals(backgroundVideoPath)) {
+                        backgroundVideoFrame = frame;
+                        updatePreview();
+                    }
+                }), exception -> handlePreviewVideoFailure(video, exception));
+    }
+
     private void advancePreviewPlayback() {
         if (!previewPlaying || spectrum == null) {
             return;
@@ -1220,8 +1364,10 @@ public final class MainFrame extends JFrame {
                 fps, timelineSlider.getMaximum());
         if (!previewAudioStarted && PreviewTimeline.audioShouldBeActive(
                 target, playbackPreRollFrames)) {
-            startPreviewAudio(PreviewTimeline.audioOffsetSeconds(
-                    target, playbackPreRollFrames, fps));
+            double offset = PreviewTimeline.audioOffsetSeconds(
+                    target, playbackPreRollFrames, fps);
+            startPreviewAudio(offset);
+            startPreviewVideo(offset);
         }
         if (previewAudioStarted && previewAudioPlayer.isReady()) {
             int audioTarget = PreviewTimeline.frameForAudioPosition(
@@ -1241,12 +1387,64 @@ public final class MainFrame extends JFrame {
     private void stopPreviewPlayback(boolean userPause) {
         playbackTimer.stop();
         previewAudioPlayer.stop();
+        previewVideoPlayer.stop();
         previewPlaying = false;
         previewAudioStarted = false;
         updatePlayButtonText();
         if (userPause) {
             setStatus("status.paused");
         }
+    }
+
+    private void requestBackgroundVideoFrame() {
+        Path video = backgroundVideoPath;
+        if (video == null || previewPlaying) {
+            return;
+        }
+        RenderConfig config = currentRenderConfig();
+        int preRoll = introPreRollFrames(config);
+        double songOffset = PreviewTimeline.audioOffsetSeconds(
+                timelineSlider.getValue(), preRoll, selectedFps());
+        VideoEndMode endMode = (VideoEndMode) videoEndModeBox.getSelectedItem();
+        double videoOffset = normalizedVideoOffset(songOffset, endMode);
+        previewVideoPlayer.requestFrame(video, videoOffset,
+                Math.max(2, preview.getWidth()), Math.max(2, preview.getHeight()),
+                (BackgroundFitMode) backgroundFitBox.getSelectedItem(),
+                backgroundColorButton.getBackground(),
+                frame -> SwingUtilities.invokeLater(() -> {
+                    if (!previewPlaying && video.equals(backgroundVideoPath)) {
+                        backgroundVideoFrame = frame;
+                        updatePreview();
+                    }
+                }), exception -> handlePreviewVideoFailure(video, exception));
+    }
+
+    private double normalizedVideoOffset(double songOffset, VideoEndMode endMode) {
+        double safeOffset = Math.max(0.0, songOffset);
+        if (backgroundVideoDuration <= 0.0) {
+            return safeOffset;
+        }
+        if (endMode == VideoEndMode.LOOP) {
+            return safeOffset % backgroundVideoDuration;
+        }
+        return Math.min(safeOffset, Math.max(0.0, backgroundVideoDuration - 0.001));
+    }
+
+    private void handlePreviewVideoFailure(Path video, Exception exception) {
+        SwingUtilities.invokeLater(() -> {
+            if (!video.equals(backgroundVideoPath)) {
+                return;
+            }
+            AppLogger.warning("No se pudo decodificar el fondo de video para la vista previa.",
+                    exception);
+            if (previewPlaying) {
+                stopPreviewPlayback(false);
+            }
+            showError(UiText.format("error.previewVideo",
+                    exception.getMessage() == null
+                    ? exception.getClass().getSimpleName()
+                    : exception.getMessage()), exception);
+        });
     }
 
     private void updatePlayButtonText() {
@@ -1350,6 +1548,7 @@ public final class MainFrame extends JFrame {
         setStatus("status.invalidated");
         updateTimelineLabel();
         updatePreview();
+        requestBackgroundVideoFrame();
     }
 
     private int selectedFps() {
@@ -1385,6 +1584,7 @@ public final class MainFrame extends JFrame {
         cancelButton.setEnabled(busy);
         audioButton.setEnabled(!busy);
         backgroundButton.setEnabled(!busy);
+        backgroundVideoButton.setEnabled(!busy);
         backgroundColorButton.setEnabled(!busy);
         outputButton.setEnabled(!busy);
         outputFormatBox.setEnabled(!busy);
@@ -1408,6 +1608,13 @@ public final class MainFrame extends JFrame {
         updateDualControls(busy);
         updateBarsControls(busy);
         updateLoadBarControls(busy);
+        updateBackgroundVideoControls(busy);
+    }
+
+    private void updateBackgroundVideoControls(boolean busy) {
+        boolean video = !busy && backgroundVideoPath != null;
+        backgroundFitBox.setEnabled(video);
+        videoEndModeBox.setEnabled(video);
     }
 
     private void updateBarsControls(boolean busy) {
@@ -1518,7 +1725,12 @@ public final class MainFrame extends JFrame {
             backgroundColorButton.setForeground(ThemeManager.contrast(selected));
             backgroundImage = null;
             backgroundPath = null;
+            backgroundVideoPath = null;
+            backgroundVideoDuration = -1.0;
+            backgroundVideoFrame = null;
+            previewVideoPlayer.stop();
             refreshDynamicLabels();
+            updateBackgroundVideoControls(false);
             updatePreview();
         }
     }

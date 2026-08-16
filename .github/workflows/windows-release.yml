@@ -3,6 +3,8 @@ name: Windows distributables
 on:
   push:
     branches: [main]
+    tags:
+      - 'v2.0.0-alpha.*'
     paths:
       - 'pom.xml'
       - 'src/**'
@@ -17,11 +19,6 @@ permissions:
 jobs:
   package-windows:
     runs-on: windows-2022
-    env:
-      RELEASE_TAG: v2.0.0-alpha.17
-      RELEASE_TITLE: Sonic Candle 2.0 Alpha 17
-      JAR_NAME: sonic-candle-2.0.0-alpha.17.jar
-      EXE_NAME: sonic-candle-2.0.0-alpha.17-windows-x64.exe
 
     steps:
       - name: Check out repository
@@ -33,6 +30,17 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+
+      - name: Resolve version and package names
+        shell: pwsh
+        run: |
+          [xml]$pom = Get-Content -Raw 'pom.xml'
+          $version = [string]$pom.project.version
+          $alpha = if ($version -match 'alpha\.(\d+)$') { $Matches[1] } else { $version }
+          "PROJECT_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RELEASE_TITLE=Sonic Candle 2.0 Alpha $alpha" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "JAR_NAME=sonic-candle-$version.jar" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "EXE_NAME=sonic-candle-$version-windows-x64.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Add WiX Toolset to PATH
         shell: pwsh
@@ -65,29 +73,31 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sonic-candle-2.0-alpha17
+          name: sonic-candle-${{ env.PROJECT_VERSION }}
           if-no-files-found: error
           path: |
             dist/${{ env.JAR_NAME }}
             dist/windows/${{ env.EXE_NAME }}
 
-      - name: Publish first Alpha 17 release
+      - name: Publish versioned prerelease
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $releaseTag = "v$env:PROJECT_VERSION"
           $ErrorActionPreference = 'Continue'
-          gh release view $env:RELEASE_TAG *> $null
+          gh release view $releaseTag *> $null
           $releaseExists = $LASTEXITCODE -eq 0
           $ErrorActionPreference = 'Stop'
           if ($releaseExists) {
-            Write-Host "Release $env:RELEASE_TAG already exists; keeping its published assets unchanged."
+            Write-Host "Release $releaseTag already exists; keeping its published assets unchanged."
             exit 0
           }
-          gh release create $env:RELEASE_TAG `
+          gh release create $releaseTag `
             --target $env:GITHUB_SHA `
             --title $env:RELEASE_TITLE `
-            --notes-file packaging/RELEASE_NOTES_ALPHA17.md `
+            --generate-notes `
             --prerelease `
             "dist/$env:JAR_NAME" `
             "dist/windows/$env:EXE_NAME"

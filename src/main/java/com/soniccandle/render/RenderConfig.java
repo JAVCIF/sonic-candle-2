@@ -2,6 +2,7 @@ package com.soniccandle.render;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.nio.file.Path;
 
 public final class RenderConfig {
 
@@ -11,6 +12,9 @@ public final class RenderConfig {
     private final Color barColor;
     private final Color backgroundColor;
     private final BufferedImage backgroundImage;
+    private final Path backgroundVideo;
+    private final BackgroundFitMode backgroundFitMode;
+    private final VideoEndMode videoEndMode;
     private final BarStyle barStyle;
     private final float sensitivity;
     private final RestingLineMode restingLineMode;
@@ -49,12 +53,31 @@ public final class RenderConfig {
             VisualizationMode visualizationMode, CircularConfig circularConfig,
             boolean reverseLinearSpectrum, DualBarConfig dualBarConfig,
             LoadBarConfig loadBarConfig, IntroAnimationConfig introAnimationConfig) {
+        this(width, height, framesPerSecond, barColor, backgroundColor,
+                backgroundImage, null, BackgroundFitMode.COVER, VideoEndMode.LOOP,
+                barStyle, sensitivity, restingLineMode, peakMode,
+                visualizationMode, circularConfig, reverseLinearSpectrum,
+                dualBarConfig, loadBarConfig, introAnimationConfig);
+    }
+
+    public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
+            Color backgroundColor, BufferedImage backgroundImage, Path backgroundVideo,
+            BackgroundFitMode backgroundFitMode, VideoEndMode videoEndMode,
+            BarStyle barStyle, float sensitivity, RestingLineMode restingLineMode,
+            PeakMode peakMode, VisualizationMode visualizationMode,
+            CircularConfig circularConfig, boolean reverseLinearSpectrum,
+            DualBarConfig dualBarConfig, LoadBarConfig loadBarConfig,
+            IntroAnimationConfig introAnimationConfig) {
         this.width = width;
         this.height = height;
         this.framesPerSecond = framesPerSecond;
         this.barColor = barColor;
         this.backgroundColor = backgroundColor;
         this.backgroundImage = backgroundImage;
+        this.backgroundVideo = backgroundVideo;
+        this.backgroundFitMode = backgroundFitMode == null
+                ? BackgroundFitMode.COVER : backgroundFitMode;
+        this.videoEndMode = videoEndMode == null ? VideoEndMode.LOOP : videoEndMode;
         this.barStyle = barStyle;
         this.sensitivity = sensitivity;
         this.restingLineMode = restingLineMode;
@@ -78,6 +101,9 @@ public final class RenderConfig {
     public Color barColor() { return barColor; }
     public Color backgroundColor() { return backgroundColor; }
     public BufferedImage backgroundImage() { return backgroundImage; }
+    public Path backgroundVideo() { return backgroundVideo; }
+    public BackgroundFitMode backgroundFitMode() { return backgroundFitMode; }
+    public VideoEndMode videoEndMode() { return videoEndMode; }
     public BarStyle barStyle() { return barStyle; }
     public float sensitivity() { return sensitivity; }
     public RestingLineMode restingLineMode() { return restingLineMode; }

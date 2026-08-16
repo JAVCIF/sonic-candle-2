@@ -33,6 +33,26 @@ public final class ExportFormatTest {
                 Path.of("out.webm"), config, ExportFormat.WEBM_VP9);
         assertContains(webm, "abgr", "libvpx-vp9", "yuva420p", "libopus");
 
+        RenderConfig videoBackground = new RenderConfig(160, 90, 30,
+                new Color(180, 90, 255), Color.BLACK, null,
+                Path.of("background.mp4"), BackgroundFitMode.COVER,
+                VideoEndMode.LOOP, BarStyle.ROUND_FILLED, 1f,
+                RestingLineMode.DOTTED, PeakMode.SOFT_LIMIT,
+                VisualizationMode.LINEAR, CircularConfig.defaults(), false,
+                DualBarConfig.defaults(), LoadBarConfig.defaults(),
+                IntroAnimationConfig.disabled());
+        List<String> videoMp4 = VideoEncoder.command(ffmpeg, audio,
+                Path.of("video-background.mp4"), videoBackground, ExportFormat.MP4);
+        assertContains(videoMp4, "abgr", "-stream_loop", "background.mp4",
+                "-filter_complex", "[composed]", "2:a:0");
+        assertTrue(videoMp4.stream().anyMatch(value -> value.contains("overlay=0:0")),
+                "El MP4 no compone el visualizador sobre el fondo de video.");
+        List<String> transparentWithVideo = VideoEncoder.command(ffmpeg, audio,
+                Path.of("transparent.mov"), videoBackground, ExportFormat.PRORES_4444);
+        assertTrue(!transparentWithVideo.contains("background.mp4")
+                && transparentWithVideo.contains("1:a:0"),
+                "La exportación transparente no ignoró el fondo global de video.");
+
         float[][] frames = new float[3][16];
         frames[0][3] = 0.8f;
         frames[1][5] = 1.1f;
@@ -57,7 +77,7 @@ public final class ExportFormatTest {
         }
         assertTrue(rejected && java.util.Arrays.equals(original, Files.readAllBytes(first)),
                 "La exportación PNG sobrescribió una secuencia existente.");
-        System.out.println("Formatos correctos: MP4, ProRes 4444, VP9 y PNG seguro.");
+        System.out.println("Formatos correctos: MP4 con fondo estático/video, ProRes 4444, VP9 y PNG seguro.");
     }
 
     private static void assertContains(List<String> command, String... values) {

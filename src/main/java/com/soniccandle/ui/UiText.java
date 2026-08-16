@@ -26,8 +26,9 @@ public final class UiText {
         add("section.geometry", "Geometría", "Geometry");
         add("section.interior", "Interior", "Interior");
 
-        add("button.audio", "Seleccionar audio…", "Select audio…");
+        add("button.audio", "Seleccionar audio o video…", "Select audio or video…");
         add("button.backgroundImage", "Seleccionar imagen de fondo…", "Select background image…");
+        add("button.backgroundVideo", "Seleccionar video de fondo…", "Select background video…");
         add("button.backgroundColor", "Usar color como fondo…", "Use color as background…");
         add("button.output", "Elegir video de salida…", "Choose output video…");
         add("button.analyze", "Analizar y previsualizar", "Analyze and preview");
@@ -44,10 +45,11 @@ public final class UiText {
         add("button.play", "▶ Reproducir", "▶ Play");
         add("button.pause", "⏸ Pausar", "⏸ Pause");
 
-        add("state.noAudio", "Ningún audio seleccionado", "No audio selected");
-        add("state.noBackgroundImage", "Ningún recurso de imagen seleccionado", "No image resource selected");
+        add("state.noAudio", "Ninguna fuente de audio seleccionada", "No audio source selected");
+        add("state.noBackgroundImage", "Ningún recurso de fondo seleccionado", "No background resource selected");
         add("state.solidBackground", "Color sólido activo", "Solid color active");
         add("state.imageBackground", "Imagen de fondo activa", "Background image active");
+        add("state.videoBackground", "Video de fondo activo", "Background video active");
         add("state.noOutput", "Ninguna salida seleccionada", "No output selected");
         add("state.noCircleImage", "Ninguna", "None");
 
@@ -63,6 +65,8 @@ public final class UiText {
         add("label.spectrum", "Espectro", "Spectrum");
         add("label.distribution", "Distribución", "Distribution");
         add("label.outputFormat", "Formato de salida", "Output format");
+        add("label.backgroundFit", "Ajuste del video", "Video fit");
+        add("label.videoEnd", "Al terminar", "When video ends");
         add("label.style", "Estilo", "Style");
         add("label.restingLine", "Línea en reposo", "Idle line");
         add("label.restingBorder", "Borde en reposo", "Idle edge");
@@ -182,6 +186,12 @@ public final class UiText {
                 "Click or drag to seek; audio and image resynchronize.");
         add("tip.outputFormat", "MP4 conserva el fondo. ProRes, VP9 y PNG exportan transparencia y conservan únicamente el visualizador y el relleno circular configurado.",
                 "MP4 keeps the background. ProRes, VP9 and PNG export transparency and keep only the visualizer and configured circular fill.");
+        add("tip.backgroundVideo", "Admite un video silencioso o ignora su audio cuando ya elegiste otra fuente. Si no hay audio seleccionado, puede usar la pista incrustada.",
+                "Accepts silent video or ignores its audio when another source is selected. If no audio is selected, its embedded track can be used.");
+        add("tip.backgroundFit", "Cubrir recorta sin deformar; Contener conserva todo el cuadro; Estirar ocupa el lienzo completo.",
+                "Cover crops without distortion; Contain preserves the full frame; Stretch fills the canvas.");
+        add("tip.videoEnd", "Repetir vuelve a iniciar el fondo; Congelar conserva su último fotograma hasta terminar la canción.",
+                "Loop restarts the background; Freeze keeps its last frame until the song ends.");
 
         add("status.ready", "Listo", "Ready");
         add("status.cancelling", "Cancelando…", "Cancelling…");
@@ -199,7 +209,7 @@ public final class UiText {
         add("status.playing", "Reproduciendo vista previa…", "Playing preview…");
         add("status.paused", "Vista previa pausada.", "Preview paused.");
 
-        add("error.selectAudioFirst", "Primero selecciona un archivo de audio.", "Select an audio file first.");
+        add("error.selectAudioFirst", "Primero selecciona una fuente con audio.", "Select a source containing audio first.");
         add("error.interrupted", "La operación fue interrumpida.", "The operation was interrupted.");
         add("error.unknown", "Error desconocido.", "Unknown error.");
         add("error.imageFormat", "Formato de imagen no reconocido.", "Unrecognized image format.");
@@ -207,11 +217,22 @@ public final class UiText {
         add("error.openCircle", "No se pudo abrir la imagen interior: %s", "Could not open the interior image: %s");
         add("error.previewAudio", "No se pudo reproducir el audio de la vista previa: %s",
                 "Could not play preview audio: %s");
+        add("error.previewVideo", "No se pudo reproducir el fondo de video: %s",
+                "Could not play the background video: %s");
+        add("error.openMedia", "No se pudo abrir el recurso multimedia: %s",
+                "Could not open the media resource: %s");
+        add("error.mediaNoAudio", "El archivo no contiene una pista de audio.",
+                "The file does not contain an audio track.");
+        add("error.mediaNoVideo", "El archivo no contiene una pista de video.",
+                "The file does not contain a video track.");
+        add("error.videoNeedsAudio", "El video quedó como fondo, pero no contiene audio. Selecciona también una canción.",
+                "The video was set as the background, but it contains no audio. Select a song too.");
         add("error.logLocation", "Registro técnico: %s", "Technical log: %s");
         add("error.unsupportedVisualizer", "Visualizador no compatible: %s", "Unsupported visualizer: %s");
         add("dialog.errorTitle", "Sonic Candle — Error", "Sonic Candle — Error");
-        add("dialog.audio", "Seleccionar audio", "Select audio");
+        add("dialog.audio", "Seleccionar audio o video con audio", "Select audio or video with audio");
         add("dialog.background", "Seleccionar imagen de fondo", "Select background image");
+        add("dialog.backgroundVideo", "Seleccionar video de fondo", "Select background video");
         add("dialog.circleImage", "Seleccionar imagen para el interior del círculo", "Select image for the circle interior");
         add("dialog.output", "Guardar video MP4", "Save MP4 video");
         add("dialog.outputFile", "Guardar exportación", "Save export");
@@ -239,14 +260,16 @@ public final class UiText {
         add("colorChooser.cancel", "Cancelar", "Cancel");
         add("colorChooser.reset", "Restablecer", "Reset");
         add("filter.audio", "Audio compatible", "Compatible audio");
+        add("filter.media", "Audio o video compatible", "Compatible audio or video");
         add("filter.images", "Imágenes", "Images");
+        add("filter.videos", "Videos", "Videos");
         add("filter.video", "Video MP4", "MP4 video");
         add("filter.mp4", "Video MP4", "MP4 video");
         add("filter.prores", "Apple ProRes 4444", "Apple ProRes 4444");
         add("filter.webm", "Video WebM VP9", "WebM VP9 video");
         add("preview.welcomeTitle", "Sonic Candle", "Sonic Candle");
-        add("preview.welcomeSubtitle", "Carga un audio para encender el espectro",
-                "Load an audio file to light up the spectrum");
+        add("preview.welcomeSubtitle", "Carga audio o un video para encender el espectro",
+                "Load audio or video to light up the spectrum");
 
         enumEn("AppLanguage", "SPANISH", "Spanish");
         enumEn("AppLanguage", "ENGLISH", "English");
@@ -256,6 +279,11 @@ public final class UiText {
         enumEn("ExportFormat", "PRORES_4444", "ProRes 4444 — Maximum transparency quality");
         enumEn("ExportFormat", "WEBM_VP9", "WebM VP9 — Moderate transparency quality");
         enumEn("ExportFormat", "PNG_SEQUENCE", "PNG — Transparent sequence");
+        enumEn("BackgroundFitMode", "COVER", "Cover");
+        enumEn("BackgroundFitMode", "CONTAIN", "Contain");
+        enumEn("BackgroundFitMode", "STRETCH", "Stretch");
+        enumEn("VideoEndMode", "LOOP", "Loop");
+        enumEn("VideoEndMode", "FREEZE", "Freeze last frame");
         enumEn("FrequencyDistributionMode", "STANDARD", "Standard");
         enumEn("FrequencyDistributionMode", "BALANCED", "Balanced — more presence on the right");
         enumEn("FrequencyDistributionMode", "PROPORTIONAL", "Proportional — uses every band");

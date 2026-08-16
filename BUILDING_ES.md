@@ -19,13 +19,13 @@ Los paquetes nativos deben generarse en su sistema operativo de destino. Por eso
 4. NetBeans ejecutará Maven y creará:
 
    ```text
-   target\sonic-candle-2.0.0-alpha.17.jar
+   target\sonic-candle-2.0.0-alpha.18.jar
    ```
 
 5. Pruébalo desde una terminal abierta en la carpeta del proyecto:
 
    ```text
-   java -jar target\sonic-candle-2.0.0-alpha.17.jar
+   java -jar target\sonic-candle-2.0.0-alpha.18.jar
    ```
 
 El plugin JAR de Maven escribe `com.soniccandle.App` en el manifiesto. Por eso puede abrirse con `java -jar` o mediante doble clic cuando Windows tenga los `.jar` asociados con Java.
@@ -49,8 +49,8 @@ El EXE generado es un instalador gráfico por usuario. Incluye su propio runtime
 6. Encontrarás los resultados en:
 
    ```text
-   dist\sonic-candle-2.0.0-alpha.17.jar
-   dist\windows\sonic-candle-2.0.0-alpha.17-windows-x64.exe
+   dist\sonic-candle-2.0.0-alpha.18.jar
+   dist\windows\sonic-candle-2.0.0-alpha.18-windows-x64.exe
    ```
 
 El instalador no está firmado digitalmente, por lo que Windows SmartScreen puede advertir que su editor es desconocido. Para eliminar esa advertencia de manera confiable hace falta un certificado público de firma de código.

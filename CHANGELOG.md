@@ -4,6 +4,18 @@ All notable changes to Sonic Candle 2.0 are documented here.
 
 [Historial completo en español](CHANGELOG_ES.md)
 
+## 2.0.0-alpha.18 — 2026-08-15
+
+- Added automatic FFprobe detection for audio-only, silent-video, and video-with-audio inputs.
+- The main input selector now accepts a video with embedded audio and automatically uses both its sound and picture.
+- Added independent background-video selection for combining a song with silent footage or footage whose audio must be ignored.
+- Added Cover, Contain, and Stretch fitting plus Loop and Freeze-last-frame duration behavior.
+- Background videos are decoded as a stream by FFmpeg instead of being stored in memory.
+- MP4 composites the transparent Java visualizer over the streamed video while preserving the selected song as the only audio source.
+- ProRes 4444, VP9, and PNG continue to omit every global background, including video.
+- The audiovisual preview seeks and plays the background video from the same timeline position as the audio.
+- Added command, media-probe, real preview-decoding, looping, freezing, and complete MP4 export regressions.
+
 ## 2.0.0-alpha.17 — 2026-08-15
 
 - Added reproducible executable JAR and Windows EXE builds.
