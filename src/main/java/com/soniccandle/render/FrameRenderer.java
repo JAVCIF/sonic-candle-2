@@ -58,6 +58,15 @@ public final class FrameRenderer {
     public BufferedImage render(float[] spectrum, int playbackFrameIndex,
             float loadBarLevelOverride, float[] cardiogramSignal,
             int cardiogramFrameIndex, float[] cardiogramSweepPositions) {
+        return render(spectrum, playbackFrameIndex, loadBarLevelOverride,
+                cardiogramSignal, cardiogramFrameIndex,
+                cardiogramSweepPositions, null, -1);
+    }
+
+    public BufferedImage render(float[] spectrum, int playbackFrameIndex,
+            float loadBarLevelOverride, float[] cardiogramSignal,
+            int cardiogramFrameIndex, float[] cardiogramSweepPositions,
+            NeonWaveTimeline neonWaveTimeline, int neonWaveFrameIndex) {
         BufferedImage frame = new BufferedImage(
                 config.width(), config.height(), transparentCanvas
                         ? BufferedImage.TYPE_4BYTE_ABGR
@@ -72,7 +81,8 @@ public final class FrameRenderer {
         } else {
             drawSpectrum(graphics, spectrum, loadBarLevelOverride,
                     cardiogramSignal, cardiogramFrameIndex,
-                    cardiogramSweepPositions);
+                    cardiogramSweepPositions, neonWaveTimeline,
+                    neonWaveFrameIndex);
         }
         graphics.dispose();
         return frame;
@@ -156,7 +166,8 @@ public final class FrameRenderer {
 
     private void drawSpectrum(Graphics2D graphics, float[] spectrum,
             float loadBarLevelOverride, float[] cardiogramSignal,
-            int cardiogramFrameIndex, float[] cardiogramSweepPositions) {
+            int cardiogramFrameIndex, float[] cardiogramSweepPositions,
+            NeonWaveTimeline neonWaveTimeline, int neonWaveFrameIndex) {
         if (config.visualizationMode() == VisualizationMode.CARDIOGRAM) {
             drawCardiogram(graphics, cardiogramSignal, cardiogramFrameIndex,
                     cardiogramSweepPositions);
@@ -171,8 +182,235 @@ public final class FrameRenderer {
             case LOAD_BAR -> drawLoadBars(graphics, spectrum, loadBarLevelOverride);
             case CARDIOGRAM -> drawCardiogram(graphics, cardiogramSignal,
                     cardiogramFrameIndex, cardiogramSweepPositions);
+            case NEON_WAVE -> drawNeonWave(graphics, spectrum,
+                    neonWaveTimeline, neonWaveFrameIndex);
             case LINEAR -> drawLinearSpectrum(graphics, spectrum);
         }
+    }
+
+    private void drawNeonWave(Graphics2D graphics, float[] spectrum,
+            NeonWaveTimeline timeline, int currentFrame) {
+        NeonWaveConfig neon = config.neonWaveConfig();
+        float[] current = timeline != null && currentFrame >= 0
+                && currentFrame < timeline.frameCount()
+                ? timeline.frame(currentFrame)
+                : NeonWaveProcessor.reduceFrame(spectrum, neon.pointCount());
+        if (current.length < 2) {
+            return;
+        }
+
+        int marginX = Math.max(12, config.width() / 8);
+        int left = marginX;
+        int right = Math.max(left + 2, config.width() - marginX - 1);
+        int marginY = Math.max(8, config.height() / 28);
+        int groupHeight = Math.max(24, (int) Math.round(config.height() * 0.30));
+        int groupTop = switch (neon.placement()) {
+            case TOP -> marginY;
+            case CENTER -> (config.height() - groupHeight) / 2;
+            case BOTTOM -> config.height() - marginY - groupHeight;
+        };
+        int direction = neon.inverted() ? 1 : -1;
+        int baseline = neon.inverted() ? groupTop : groupTop + groupHeight;
+        double amplitude = Math.max(10.0, groupHeight - 2.0);
+        float baseWidth = Math.max(1.5f, config.height() / 300f);
+
+        Graphics2D neonGraphics = (Graphics2D) graphics.create();
+        configureQuality(neonGraphics);
+        int echoes = neon.echoCount();
+        for (int echo = echoes; echo >= 1; echo--) {
+            int sourceFrame = currentFrame - echo * neon.echoSpacing();
+            if (timeline == null || sourceFrame < 0
+                    || sourceFrame >= timeline.frameCount()) {
+                continue;
+            }
+            float age = echo / (float) Math.max(1, echoes);
+            float alpha = neon.echoOpacityPercent() / 100f
+                    * (1f - age * 0.72f);
+            Path2D echoPath = neonPath(timeline.frame(sourceFrame), left, right,
+                    baseline, amplitude, direction, neon.lineStyle());
+            neonGraphics.setComposite(AlphaComposite.SrcOver.derive(
+                    Math.max(0.03f, Math.min(0.72f, alpha))));
+            neonGraphics.setColor(config.barColor());
+            neonGraphics.setStroke(neonStroke(neon.lineStyle(),
+                    Math.max(0.8f, baseWidth * 0.68f)));
+            neonGraphics.draw(echoPath);
+        }
+
+        Path2D mainPath = neonPath(current, left, right, baseline,
+                amplitude, direction, neon.lineStyle());
+        drawNeonGlow(neonGraphics, mainPath, config.barColor(), baseWidth,
+                neon.glowPercent());
+        drawNeonNodes(neonGraphics, current, left, right, baseline,
+                amplitude, direction, baseWidth, neon.glowPercent());
+        drawNeonParticles(neonGraphics, timeline, currentFrame, left, right,
+                baseline, direction, neon.particleMode(), neon.glowPercent());
+        neonGraphics.dispose();
+    }
+
+    private Path2D neonPath(float[] points, int left, int right, int baseline,
+            double amplitude, int direction, NeonWaveLineStyle style) {
+        double[] xs = new double[points.length];
+        double[] ys = new double[points.length];
+        for (int point = 0; point < points.length; point++) {
+            xs[point] = left + point * (right - left)
+                    / (double) Math.max(1, points.length - 1);
+            double normalized = 1.0 - Math.exp(-Math.max(0f, points[point])
+                    * Math.max(0f, config.sensitivity()) * 1.34);
+            ys[point] = baseline + direction * amplitude
+                    * Math.min(0.985, normalized);
+        }
+        Path2D path = new Path2D.Double();
+        path.moveTo(xs[0], ys[0]);
+        if (style == NeonWaveLineStyle.SMOOTH && points.length > 2) {
+            for (int point = 1; point < points.length - 1; point++) {
+                double nextX = (xs[point] + xs[point + 1]) * 0.5;
+                double nextY = (ys[point] + ys[point + 1]) * 0.5;
+                path.quadTo(xs[point], ys[point], nextX, nextY);
+            }
+            path.quadTo(xs[xs.length - 1], ys[ys.length - 1],
+                    xs[xs.length - 1], ys[ys.length - 1]);
+        } else {
+            for (int point = 1; point < points.length; point++) {
+                path.lineTo(xs[point], ys[point]);
+            }
+        }
+        return path;
+    }
+
+    private void drawNeonGlow(Graphics2D graphics, Path2D path, Color color,
+            float baseWidth, int glowPercent) {
+        float glow = glowPercent / 100f;
+        if (glow > 0f) {
+            graphics.setComposite(AlphaComposite.SrcOver.derive(
+                    Math.min(0.20f, 0.08f * glow)));
+            graphics.setColor(color);
+            graphics.setStroke(neonStroke(NeonWaveLineStyle.ROUNDED,
+                    baseWidth * (7f + glow * 2f)));
+            graphics.draw(path);
+            graphics.setComposite(AlphaComposite.SrcOver.derive(
+                    Math.min(0.42f, 0.18f * glow)));
+            graphics.setStroke(neonStroke(NeonWaveLineStyle.ROUNDED,
+                    baseWidth * (3.2f + glow)));
+            graphics.draw(path);
+        }
+        graphics.setComposite(AlphaComposite.SrcOver);
+        graphics.setColor(color);
+        graphics.setStroke(neonStroke(config.neonWaveConfig().lineStyle(),
+                baseWidth));
+        graphics.draw(path);
+    }
+
+    private void drawNeonNodes(Graphics2D graphics, float[] points,
+            int left, int right, int baseline, double amplitude, int direction,
+            float baseWidth, int glowPercent) {
+        Color color = config.barColor();
+        double radius = Math.max(2.2, baseWidth * 1.55);
+        float glow = glowPercent / 100f;
+        for (int point = 0; point < points.length; point++) {
+            double x = left + point * (right - left)
+                    / (double) Math.max(1, points.length - 1);
+            double normalized = 1.0 - Math.exp(-Math.max(0f, points[point])
+                    * Math.max(0f, config.sensitivity()) * 1.34);
+            double y = baseline + direction * amplitude
+                    * Math.min(0.985, normalized);
+            if (glow > 0f) {
+                double outer = radius * (2.5 + glow);
+                graphics.setComposite(AlphaComposite.SrcOver.derive(
+                        Math.min(0.24f, 0.10f * glow)));
+                graphics.setColor(color);
+                graphics.fill(new Ellipse2D.Double(x - outer, y - outer,
+                        outer * 2, outer * 2));
+            }
+            graphics.setComposite(AlphaComposite.SrcOver);
+            graphics.setColor(brightened(color));
+            graphics.fill(new Ellipse2D.Double(x - radius, y - radius,
+                    radius * 2, radius * 2));
+        }
+    }
+
+    private void drawNeonParticles(Graphics2D graphics,
+            NeonWaveTimeline timeline, int currentFrame, int left, int right,
+            int baseline, int peakDirection, NeonWaveParticleMode mode,
+            int glowPercent) {
+        if (mode == NeonWaveParticleMode.DISABLED || timeline == null
+                || currentFrame < 0 || timeline.frameCount() == 0) {
+            return;
+        }
+        int particleDirection = -peakDirection;
+        int life = Math.max(12, (int) Math.round(config.framesPerSecond() * 0.82));
+        float density = mode.density();
+        Color color = config.barColor();
+        for (int age = 0; age < life; age++) {
+            int emissionFrame = currentFrame - age;
+            if (emissionFrame < 0 || emissionFrame >= timeline.frameCount()) {
+                continue;
+            }
+            float energy = Math.min(1.25f, timeline.energy()[emissionFrame]);
+            float onset = Math.min(1f, timeline.onset()[emissionFrame] * 4.5f);
+            float drive = Math.min(1f, energy * 0.72f + onset * 0.9f);
+            int candidates = mode == NeonWaveParticleMode.INTENSE ? 4 : 2;
+            for (int particle = 0; particle < candidates; particle++) {
+                long seed = mix64(((long) emissionFrame + 1L) * 0x9E3779B97F4A7C15L
+                        + particle * 0xC2B2AE3D27D4EB4FL);
+                double chance = unit(seed);
+                if (chance > drive * density * 0.58) {
+                    continue;
+                }
+                double xStart = left + unit(mix64(seed + 11)) * (right - left);
+                double drift = (unit(mix64(seed + 23)) - 0.5)
+                        * age * config.width() / 900.0;
+                double speed = 0.45 + unit(mix64(seed + 37)) * 1.45;
+                double y = baseline + particleDirection
+                        * (4.0 + age * speed * config.height() / 420.0);
+                if (y < 1 || y >= config.height() - 1) {
+                    continue;
+                }
+                float fade = 1f - age / (float) life;
+                float alpha = Math.min(0.72f,
+                        fade * drive * (0.24f + density * 0.25f));
+                double radius = Math.max(0.8, config.height() / 720.0)
+                        * (0.7 + unit(mix64(seed + 53)) * 1.8);
+                if (glowPercent > 0) {
+                    graphics.setComposite(AlphaComposite.SrcOver.derive(
+                            Math.max(0.01f, alpha * 0.18f)));
+                    graphics.setColor(color);
+                    graphics.fill(new Ellipse2D.Double(xStart + drift - radius * 3,
+                            y - radius * 3, radius * 6, radius * 6));
+                }
+                graphics.setComposite(AlphaComposite.SrcOver.derive(
+                        Math.max(0.02f, alpha)));
+                graphics.setColor(brightened(color));
+                graphics.fill(new Ellipse2D.Double(xStart + drift - radius,
+                        y - radius, radius * 2, radius * 2));
+            }
+        }
+        graphics.setComposite(AlphaComposite.SrcOver);
+    }
+
+    private static BasicStroke neonStroke(NeonWaveLineStyle style, float width) {
+        int cap = style == NeonWaveLineStyle.ANGULAR
+                ? BasicStroke.CAP_BUTT : BasicStroke.CAP_ROUND;
+        int join = style == NeonWaveLineStyle.ANGULAR
+                ? BasicStroke.JOIN_MITER : BasicStroke.JOIN_ROUND;
+        return new BasicStroke(Math.max(0.5f, width), cap, join);
+    }
+
+    private static Color brightened(Color color) {
+        return new Color(Math.min(255, color.getRed() + 46),
+                Math.min(255, color.getGreen() + 34),
+                Math.min(255, color.getBlue() + 24));
+    }
+
+    private static long mix64(long value) {
+        value ^= value >>> 33;
+        value *= 0xff51afd7ed558ccdl;
+        value ^= value >>> 33;
+        value *= 0xc4ceb9fe1a85ec53l;
+        return value ^ value >>> 33;
+    }
+
+    private static double unit(long value) {
+        return (value >>> 11) * 0x1.0p-53;
     }
 
     private void drawCardiogram(Graphics2D graphics, float[] signal,

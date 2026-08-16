@@ -5,6 +5,7 @@ on:
     branches: [main]
     tags:
       - 'v2.0.0-alpha.*'
+      - 'v2.0.0-beta.*'
     paths:
       - 'pom.xml'
       - 'src/**'
@@ -36,9 +37,15 @@ jobs:
         run: |
           [xml]$pom = Get-Content -Raw 'pom.xml'
           $version = [string]$pom.project.version
-          $alpha = if ($version -match 'alpha\.(\d+)$') { $Matches[1] } else { $version }
+          if ($version -match 'beta\.(\d+)$') {
+            $releaseTitle = "Sonic Candle 2.0 Beta $($Matches[1]).0"
+          } elseif ($version -match 'alpha\.(\d+)$') {
+            $releaseTitle = "Sonic Candle 2.0 Alpha $($Matches[1])"
+          } else {
+            $releaseTitle = "Sonic Candle $version"
+          }
           "PROJECT_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "RELEASE_TITLE=Sonic Candle 2.0 Alpha $alpha" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RELEASE_TITLE=$releaseTitle" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "JAR_NAME=sonic-candle-$version.jar" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "EXE_NAME=sonic-candle-$version-windows-x64.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
@@ -94,10 +101,20 @@ jobs:
             Write-Host "Release $releaseTag already exists; keeping its published assets unchanged."
             exit 0
           }
-          gh release create $releaseTag `
-            --target $env:GITHUB_SHA `
-            --title $env:RELEASE_TITLE `
-            --generate-notes `
-            --prerelease `
-            "dist/$env:JAR_NAME" `
+          $notesFile = "packaging/RELEASE_NOTES_$env:PROJECT_VERSION.md"
+          $releaseArgs = @(
+            "release", "create", $releaseTag,
+            "--target", $env:GITHUB_SHA,
+            "--title", $env:RELEASE_TITLE,
+            "--prerelease"
+          )
+          if (Test-Path $notesFile) {
+            $releaseArgs += @("--notes-file", $notesFile)
+          } else {
+            $releaseArgs += "--generate-notes"
+          }
+          $releaseArgs += @(
+            "dist/$env:JAR_NAME",
             "dist/windows/$env:EXE_NAME"
+          )
+          & gh @releaseArgs

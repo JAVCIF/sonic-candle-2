@@ -4,6 +4,22 @@ All notable changes to Sonic Candle 2.0 are documented here.
 
 [Historial completo en español](CHANGELOG_ES.md)
 
+## 2.0.0-beta.1 — 2026-08-15
+
+- Promoted the completed Alpha 20 feature set to **Beta 1.0**, the first community-testing release.
+- Feature development is temporarily frozen while real-world feedback, bug reports, and preset requests are collected.
+
+- Added a sixth **Neon Wave** visualizer inspired by glowing node-and-line music displays.
+- The spectrum is reduced to 8–32 stable nodes whose connected peaks remain contained inside the video.
+- Added Angular, Smooth, and Rounded line finishes with an independent orange default color, sensitivity, and 0–200% glow control.
+- Added Top, Center, and Bottom placement plus vertical peak inversion.
+- Added up to ten temporal echoes with configurable frame spacing and opacity. Previous musical states form deterministic luminous fans instead of random geometry.
+- Added Disabled, Subtle, and Intense particle modes. Sparks are deterministically derived from musical energy and attacks, so preview and final export match frame for frame.
+- All Neon Wave controls update the static preview immediately; Analyze and preview remains responsible only for computing and playing real musical motion.
+- Neon Wave is supported by MP4, transparent ProRes 4444, transparent WebM VP9, and transparent PNG sequence exports.
+- Added processor, determinism, style, inversion, containment, and bilingual-interface regressions.
+- The straight node line now remains visible through absolute silence instead of disappearing between musical passages.
+
 ## 2.0.0-alpha.19 — 2026-08-15
 
 - Added a fifth Cardiogram visualizer with music-driven P–QRS–T pulses.

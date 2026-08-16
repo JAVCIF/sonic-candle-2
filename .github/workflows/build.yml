@@ -42,6 +42,8 @@ jobs:
             com.soniccandle.render.LoadBarRendererTest
             com.soniccandle.render.CardiogramSignalProcessorTest
             com.soniccandle.render.CardiogramRendererTest
+            com.soniccandle.render.NeonWaveProcessorTest
+            com.soniccandle.render.NeonWaveRendererTest
             com.soniccandle.render.TransparentRendererTest
             com.soniccandle.render.ExportFormatTest
             com.soniccandle.ffmpeg.FFmpegLocatorTest

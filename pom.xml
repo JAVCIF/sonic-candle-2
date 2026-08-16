@@ -6,7 +6,7 @@
 
     <groupId>com.soniccandle</groupId>
     <artifactId>sonic-candle</artifactId>
-    <version>2.0.0-alpha.19</version>
+    <version>2.0.0-beta.1</version>
     <name>Sonic Candle</name>
     <description>Generador bilingüe de videos de espectro musical con vista previa audiovisual.</description>
 

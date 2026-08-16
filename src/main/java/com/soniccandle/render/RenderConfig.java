@@ -26,6 +26,7 @@ public final class RenderConfig {
     private final LoadBarConfig loadBarConfig;
     private final IntroAnimationConfig introAnimationConfig;
     private final CardiogramConfig cardiogramConfig;
+    private final NeonWaveConfig neonWaveConfig;
 
     public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
             Color backgroundColor, BufferedImage backgroundImage, BarStyle barStyle,
@@ -86,6 +87,23 @@ public final class RenderConfig {
             DualBarConfig dualBarConfig, LoadBarConfig loadBarConfig,
             IntroAnimationConfig introAnimationConfig,
             CardiogramConfig cardiogramConfig) {
+        this(width, height, framesPerSecond, barColor, backgroundColor,
+                backgroundImage, backgroundVideo, backgroundFitMode, videoEndMode,
+                barStyle, sensitivity, restingLineMode, peakMode,
+                visualizationMode, circularConfig, reverseLinearSpectrum,
+                dualBarConfig, loadBarConfig, introAnimationConfig,
+                cardiogramConfig, NeonWaveConfig.defaults());
+    }
+
+    public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
+            Color backgroundColor, BufferedImage backgroundImage, Path backgroundVideo,
+            BackgroundFitMode backgroundFitMode, VideoEndMode videoEndMode,
+            BarStyle barStyle, float sensitivity, RestingLineMode restingLineMode,
+            PeakMode peakMode, VisualizationMode visualizationMode,
+            CircularConfig circularConfig, boolean reverseLinearSpectrum,
+            DualBarConfig dualBarConfig, LoadBarConfig loadBarConfig,
+            IntroAnimationConfig introAnimationConfig,
+            CardiogramConfig cardiogramConfig, NeonWaveConfig neonWaveConfig) {
         this.width = width;
         this.height = height;
         this.framesPerSecond = framesPerSecond;
@@ -113,6 +131,8 @@ public final class RenderConfig {
                 ? IntroAnimationConfig.disabled() : introAnimationConfig;
         this.cardiogramConfig = cardiogramConfig == null
                 ? CardiogramConfig.defaults() : cardiogramConfig;
+        this.neonWaveConfig = neonWaveConfig == null
+                ? NeonWaveConfig.defaults() : neonWaveConfig;
     }
 
     public RenderConfig(int width, int height, int framesPerSecond, Color barColor,
@@ -151,6 +171,7 @@ public final class RenderConfig {
     public LoadBarConfig loadBarConfig() { return loadBarConfig; }
     public IntroAnimationConfig introAnimationConfig() { return introAnimationConfig; }
     public CardiogramConfig cardiogramConfig() { return cardiogramConfig; }
+    public NeonWaveConfig neonWaveConfig() { return neonWaveConfig; }
 
     public boolean introAnimationApplies() {
         if (introAnimationConfig.mode() == IntroAnimationMode.DISABLED) {

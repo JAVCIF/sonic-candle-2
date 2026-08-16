@@ -1,6 +1,7 @@
 package com.soniccandle.ui;
 
 import com.soniccandle.render.FrameRenderer;
+import com.soniccandle.render.NeonWaveTimeline;
 import com.soniccandle.render.RenderConfig;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -20,6 +21,8 @@ public final class SpectrumPanel extends JPanel {
     private float[] cardiogramSignal;
     private int cardiogramFrameIndex = -1;
     private float[] cardiogramSweepPositions;
+    private NeonWaveTimeline neonWaveTimeline;
+    private int neonWaveFrameIndex = -1;
 
     public SpectrumPanel() {
         setPreferredSize(new Dimension(720, 405));
@@ -45,13 +48,23 @@ public final class SpectrumPanel extends JPanel {
             int playbackFrameIndex, float loadBarLevelOverride,
             float[] cardiogramSignal, int cardiogramFrameIndex) {
         showFrame(spectrum, config, playbackFrameIndex, loadBarLevelOverride,
-                cardiogramSignal, cardiogramFrameIndex, null);
+                cardiogramSignal, cardiogramFrameIndex, null, null, -1);
     }
 
     public void showFrame(float[] spectrum, RenderConfig config,
             int playbackFrameIndex, float loadBarLevelOverride,
             float[] cardiogramSignal, int cardiogramFrameIndex,
             float[] cardiogramSweepPositions) {
+        showFrame(spectrum, config, playbackFrameIndex, loadBarLevelOverride,
+                cardiogramSignal, cardiogramFrameIndex,
+                cardiogramSweepPositions, null, -1);
+    }
+
+    public void showFrame(float[] spectrum, RenderConfig config,
+            int playbackFrameIndex, float loadBarLevelOverride,
+            float[] cardiogramSignal, int cardiogramFrameIndex,
+            float[] cardiogramSweepPositions,
+            NeonWaveTimeline neonWaveTimeline, int neonWaveFrameIndex) {
         this.spectrum = spectrum == null ? createPlaceholder() : spectrum;
         this.config = config;
         this.playbackFrameIndex = playbackFrameIndex;
@@ -59,6 +72,8 @@ public final class SpectrumPanel extends JPanel {
         this.cardiogramSignal = cardiogramSignal;
         this.cardiogramFrameIndex = cardiogramFrameIndex;
         this.cardiogramSweepPositions = cardiogramSweepPositions;
+        this.neonWaveTimeline = neonWaveTimeline;
+        this.neonWaveFrameIndex = neonWaveFrameIndex;
         repaint();
     }
 
@@ -79,11 +94,12 @@ public final class SpectrumPanel extends JPanel {
                     config.visualizationMode(), config.circularConfig(),
                     config.reverseLinearSpectrum(), config.dualBarConfig(),
                     config.loadBarConfig(), config.introAnimationConfig(),
-                    config.cardiogramConfig());
+                    config.cardiogramConfig(), config.neonWaveConfig());
             BufferedImage preview = new FrameRenderer(previewConfig)
                     .render(spectrum, playbackFrameIndex, loadBarLevelOverride,
                             cardiogramSignal, cardiogramFrameIndex,
-                            cardiogramSweepPositions);
+                            cardiogramSweepPositions, neonWaveTimeline,
+                            neonWaveFrameIndex);
             g2.drawImage(preview, 0, 0, null);
         }
         g2.dispose();

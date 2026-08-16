@@ -54,6 +54,10 @@ public final class VideoEncoder {
                 == VisualizationMode.CARDIOGRAM
                 ? CardiogramSignalProcessor.timeline(spectrum,
                         config.cardiogramConfig()) : null;
+        NeonWaveTimeline neonWaveTimeline = config.visualizationMode()
+                == VisualizationMode.NEON_WAVE
+                ? NeonWaveProcessor.process(spectrum,
+                        config.neonWaveConfig()) : null;
         boolean wasCancelled = false;
         IOException writeFailure = null;
 
@@ -68,7 +72,8 @@ public final class VideoEncoder {
                     break;
                 }
                 BufferedImage frame = renderFrame(renderer, spectrum,
-                        loadBarLevels, cardiogramTimeline, silence, frameIndex,
+                        loadBarLevels, cardiogramTimeline, neonWaveTimeline,
+                        silence, frameIndex,
                         preRollFrames);
                 byte[] pixels = ((DataBufferByte) frame.getRaster()
                         .getDataBuffer()).getData();
@@ -120,6 +125,10 @@ public final class VideoEncoder {
                 == VisualizationMode.CARDIOGRAM
                 ? CardiogramSignalProcessor.timeline(spectrum,
                         config.cardiogramConfig()) : null;
+        NeonWaveTimeline neonWaveTimeline = config.visualizationMode()
+                == VisualizationMode.NEON_WAVE
+                ? NeonWaveProcessor.process(spectrum,
+                        config.neonWaveConfig()) : null;
         int preRollFrames = preRollFrames(config);
         int totalFrames = spectrum.frameCount() + preRollFrames;
         float[] silence = new float[spectrum.bandCount()];
@@ -130,7 +139,8 @@ public final class VideoEncoder {
                     throw new CancellationException("Render cancelado.");
                 }
                 BufferedImage frame = renderFrame(renderer, spectrum,
-                        loadBarLevels, cardiogramTimeline, silence, frameIndex,
+                        loadBarLevels, cardiogramTimeline, neonWaveTimeline,
+                        silence, frameIndex,
                         preRollFrames);
                 Path framePath = outputDirectory.resolve(String.format(
                         Locale.ROOT, "sonic-candle_%06d.png", frameIndex + 1));
@@ -171,7 +181,8 @@ public final class VideoEncoder {
 
     private static BufferedImage renderFrame(FrameRenderer renderer,
             SpectrumData spectrum, float[] loadBarLevels,
-            CardiogramTimeline cardiogramTimeline, float[] silence,
+            CardiogramTimeline cardiogramTimeline,
+            NeonWaveTimeline neonWaveTimeline, float[] silence,
             int frameIndex, int preRollFrames) {
         int spectrumIndex = frameIndex - preRollFrames;
         float[] values = spectrumIndex < 0
@@ -183,7 +194,8 @@ public final class VideoEncoder {
         float[] sweepPositions = cardiogramTimeline == null
                 ? null : cardiogramTimeline.sweepPosition();
         return renderer.render(values, frameIndex, loadBarLevel,
-                cardiogramSignal, spectrumIndex, sweepPositions);
+                cardiogramSignal, spectrumIndex, sweepPositions,
+                neonWaveTimeline, spectrumIndex);
     }
 
     static List<String> command(Path ffmpeg, Path audio, Path output,

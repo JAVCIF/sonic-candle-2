@@ -26,6 +26,9 @@ public final class UiText {
         add("section.geometry", "Geometría", "Geometry");
         add("section.interior", "Interior", "Interior");
         add("section.cardiogramTrace", "Trazo cardiográfico", "Cardiogram trace");
+        add("section.neonWaveTrace", "Onda de neón", "Neon wave");
+        add("section.neonEchoes", "Ecos temporales", "Temporal echoes");
+        add("section.neonParticles", "Partículas", "Particles");
 
         add("button.audio", "Seleccionar audio o video…", "Select audio or video…");
         add("button.backgroundImage", "Seleccionar imagen de fondo…", "Select background image…");
@@ -59,6 +62,7 @@ public final class UiText {
         add("tab.dual", "Doble barra", "Dual bar");
         add("tab.load", "Barra de carga", "Loading bar");
         add("tab.cardiogram", "Electrocardiógrafo", "Cardiogram");
+        add("tab.neonWave", "Neon Wave", "Neon Wave");
 
         add("label.resolution", "Resolución", "Resolution");
         add("label.fps", "FPS", "FPS");
@@ -106,6 +110,13 @@ public final class UiText {
         add("label.lineStyle", "Estilo de línea", "Line style");
         add("label.beatMode", "Modo de latido", "Heartbeat mode");
         add("label.sweepSpeed", "Velocidad de barrido", "Sweep speed");
+        add("label.pointCount", "Puntos", "Points");
+        add("label.placement", "Posición", "Placement");
+        add("label.echoCount", "Cantidad de ecos", "Echo count");
+        add("label.echoSpacing", "Separación de ecos", "Echo spacing");
+        add("label.echoOpacity", "Opacidad de ecos (%)", "Echo opacity (%)");
+        add("label.glow", "Brillo (%)", "Glow (%)");
+        add("label.particles", "Partículas", "Particles");
 
         add("check.reverseBars", "Invertir izquierda/derecha", "Reverse left/right");
         add("check.reverseTop", "Invertir barra superior", "Reverse top bar");
@@ -116,6 +127,8 @@ public final class UiText {
         add("check.adaptiveCardiogramSweep",
                 "Adaptar barrido a la intensidad",
                 "Adapt sweep to intensity");
+        add("check.invertNeonWave", "Invertir picos verticalmente",
+                "Invert peaks vertically");
         add("note.oppositeBars", "Dos barras se ubican automáticamente en lados opuestos.",
                 "Two bars are placed automatically on opposite sides.");
         add("note.exportMp4", "Incluye el fondo y todas las imágenes configuradas.",
@@ -128,6 +141,8 @@ public final class UiText {
                 "PNG frames with alpha; the sequence contains no audio.");
         add("note.cardiogramContained", "Los latidos permanecen dentro del marco y el trazo antiguo desaparece al salir.",
                 "Heartbeats remain inside the frame and old trace disappears as it exits.");
+        add("note.neonWaveContained", "La onda, sus ecos y partículas permanecen dentro del video.",
+                "The wave, echoes and particles remain inside the video.");
 
         add("tip.motion", "Normal conserva más inercia; Ágil reacciona antes; Rápido sigue golpes breves.",
                 "Normal keeps more inertia; Agile reacts sooner; Fast follows short hits.");
@@ -204,6 +219,28 @@ public final class UiText {
                 "Adjusts P, QRS and T height without allowing them outside the video.");
         add("tip.cardiogramReverse", "Hace entrar el latido nuevo por la izquierda y elimina el trazo por la derecha.",
                 "Makes the new beat enter from the left and removes old trace on the right.");
+        add("tip.neonPointCount", "Define cuántos nodos forman la silueta; menos puntos producen picos más grandes.",
+                "Sets how many nodes form the silhouette; fewer points create broader peaks.");
+        add("tip.neonLineStyle", "Angular conserva quiebres marcados; Suavizada y Redondeada reducen la dureza del trazo.",
+                "Angular keeps sharp bends; Smooth and Rounded soften the trace.");
+        add("tip.neonEchoCount", "Cantidad de estados anteriores que permanecen como abanicos luminosos.",
+                "Number of earlier states retained as luminous fans.");
+        add("tip.neonEchoSpacing", "Separa temporalmente cada eco; valores altos dejan una estela más extensa.",
+                "Separates each echo in time; higher values create a longer trail.");
+        add("tip.neonEchoOpacity", "Controla la presencia de las líneas históricas sin alterar la onda principal.",
+                "Controls the visibility of historical lines without changing the main wave.");
+        add("tip.neonGlow", "Ajusta el halo de la línea y sus nodos.",
+                "Adjusts the halo around the line and its nodes.");
+        add("tip.neonPlacement", "Ubica la onda en la franja superior, central o inferior.",
+                "Places the wave in the top, center or bottom region.");
+        add("tip.neonInvert", "Cambia los picos hacia el lado opuesto de su línea base.",
+                "Moves peaks to the opposite side of their baseline.");
+        add("tip.neonParticles", "Genera chispas deterministas según la energía y los ataques de la canción.",
+                "Generates deterministic sparks from the song energy and attacks.");
+        add("tip.neonSensitivity", "Ajusta la altura de los picos sin permitir que salgan del video.",
+                "Adjusts peak height without allowing it outside the video.");
+        add("tip.neonColor", "Selecciona el color base de la onda, nodos, ecos y partículas.",
+                "Selects the base color for the wave, nodes, echoes and particles.");
         add("tip.play", "Reproduce o pausa la vista previa con audio desde la posición del deslizador.",
                 "Plays or pauses the preview with audio from the slider position.");
         add("tip.timeline", "Haz clic o arrastra para buscar otro instante; audio e imagen se resincronizan.",
@@ -267,6 +304,7 @@ public final class UiText {
         add("dialog.loadFillColor", "Color de llenado", "Fill color");
         add("dialog.loadBorderColor", "Color del borde", "Border color");
         add("dialog.cardiogramColor", "Color del electrocardiógrafo", "Cardiogram color");
+        add("dialog.neonWaveColor", "Color de Neon Wave", "Neon Wave color");
         add("dialog.backgroundColor", "Color del fondo", "Background color");
         add("dialog.circleInnerColor", "Color interior del círculo", "Circle interior color");
         add("dialog.renderComplete", "Video creado y guardado correctamente:\n%s",
@@ -383,6 +421,7 @@ public final class UiText {
         enumEn("VisualizationMode", "DUAL_BAR", "Dual bar");
         enumEn("VisualizationMode", "LOAD_BAR", "Loading bar");
         enumEn("VisualizationMode", "CARDIOGRAM", "Cardiogram");
+        enumEn("VisualizationMode", "NEON_WAVE", "Neon Wave");
         enumEn("CardiogramSpeedMode", "SLOW", "Slow");
         enumEn("CardiogramSpeedMode", "SYNCHRONIZED", "Synchronized");
         enumEn("CardiogramSpeedMode", "FAST", "Fast");
@@ -393,6 +432,15 @@ public final class UiText {
         enumEn("CardiogramStyle", "ROUNDED", "Rounded stroke");
         enumEn("CardiogramStyle", "SEGMENTED", "Segmented line");
         enumEn("CardiogramStyle", "FLUID_HALO", "Fluid halo");
+        enumEn("NeonWaveLineStyle", "ANGULAR", "Angular");
+        enumEn("NeonWaveLineStyle", "SMOOTH", "Smooth");
+        enumEn("NeonWaveLineStyle", "ROUNDED", "Rounded");
+        enumEn("NeonWavePlacement", "TOP", "Top");
+        enumEn("NeonWavePlacement", "CENTER", "Center");
+        enumEn("NeonWavePlacement", "BOTTOM", "Bottom");
+        enumEn("NeonWaveParticleMode", "DISABLED", "Disabled");
+        enumEn("NeonWaveParticleMode", "SUBTLE", "Subtle");
+        enumEn("NeonWaveParticleMode", "INTENSE", "Intense");
     }
 
     private UiText() {

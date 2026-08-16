@@ -1,4 +1,4 @@
-# Sonic Candle 2.0 — Alpha 19
+# Sonic Candle 2.0 — Beta 1.0
 
 Continuación experimental de **Sonic Candle**, el generador de videos de espectro musical creado originalmente por Ryan Schroeder y Chris Soderquist.
 
@@ -37,7 +37,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 - Amplitud sin techo artificial: un pico puede superar los bordes del video.
 - Picos con desborde libre o contenidos mediante un limitador suave.
 - Línea central invisible o punteada durante el reposo.
-- Pestañas independientes **Barras**, **Circular**, **Doble barra**, **Barra de carga** y **Electrocardiógrafo**, con Barras seleccionada al iniciar.
+- Pestañas independientes **Barras**, **Circular**, **Doble barra**, **Barra de carga**, **Electrocardiógrafo** y **Neon Wave**, con Barras seleccionada al iniciar.
 - Cada pestaña conserva su configuración visual; las opciones no se pisan al cambiar de composición.
 - Fondo, estilos, colores, sensibilidad, geometría, rotación e imagen circular actualizados en tiempo real.
 - Todos los sliders visuales combinan arrastre y campo numérico editable; la línea de tiempo queda separada.
@@ -62,6 +62,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 - Animación Normal, Equilibrada o Suavizada con ataque y caída temporales reales.
 - Ayudas emergentes en cada control de Barra de carga: cantidad, orientación, posiciones, inversión, forma, estilos, respuesta, animación, sensibilidad y colores.
 - Electrocardiógrafo con Ritmo cardíaco adaptativo o Golpes musicales, barrido reversible y cinco estilos de línea.
+- Neon Wave con 8 a 32 nodos, picos poligonales, ecos temporales, halo regulable, partículas musicales deterministas, inversión y ubicación superior/central/inferior.
 - Introducción punteada opcional de afuera hacia dentro o de dentro hacia afuera.
 - La introducción sólo puede activarse con línea punteada; ambos controles se bloquean mutuamente para impedir configuraciones incompatibles.
 - Introducción simultánea con la canción o previa con retraso real del audio.
@@ -82,7 +83,7 @@ Descarga el instalador de Windows o el JAR ejecutable más reciente desde [GitHu
 
 1. Descomprime el ZIP completo.
 2. En NetBeans selecciona **Archivo > Abrir proyecto**.
-3. Selecciona la carpeta `sonic-candle-2.0-alpha19`, que contiene `pom.xml`.
+3. Selecciona la carpeta `sonic-candle-2.0-beta1`, que contiene `pom.xml`.
 4. Comprueba en las propiedades del proyecto que la plataforma Java sea JDK 17 o superior.
 5. Ejecuta el proyecto con el botón **Run**.
 
@@ -98,12 +99,13 @@ Las pruebas sin dependencias externas están en `src/test/java`: `SmokeTest`,
 `PreviewTimelineTest`, `PreviewAudioPlayerTest`, `ThemeReferenceTest`,
 `TransparentRendererTest`, `ExportFormatTest`, `MediaProbeTest`,
 `PreviewVideoPlayerTest`, `PreviewVideoSmokeTest`,
-`CardiogramSignalProcessorTest` y `CardiogramRendererTest`.
+`CardiogramSignalProcessorTest`, `CardiogramRendererTest`,
+`NeonWaveProcessorTest`, `NeonWaveRendererTest` y `NeonWaveVideoSmokeTest`.
 
-Después de ejecutar **Clean and Build Project**, NetBeans crea el JAR en `target/sonic-candle-2.0.0-alpha.19.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
+Después de ejecutar **Clean and Build Project**, NetBeans crea el JAR en `target/sonic-candle-2.0.0-beta.1.jar`. Puede iniciarse desde una terminal situada en la raíz del proyecto con:
 
 ```text
-java -jar target/sonic-candle-2.0.0-alpha.19.jar
+java -jar target/sonic-candle-2.0.0-beta.1.jar
 ```
 
 El JAR necesita Java 17 y FFmpeg. El instalador EXE incluye su propio runtime de Java.
@@ -121,7 +123,7 @@ Sonic Candle busca `ffmpeg.exe` y `ffprobe.exe` de las siguientes maneras:
 La opción más sencilla para desarrollar es copiar ambos ejecutables desde la carpeta `bin` de una distribución de FFmpeg hacia:
 
 ```text
-sonic-candle-2.0-alpha19/
+sonic-candle-2.0-beta1/
 └── tools/
     ├── ffmpeg.exe
     └── ffprobe.exe
@@ -165,12 +167,13 @@ Las ganancias de Equilibrado y Proporcional son constantes durante toda la canci
 - **Doble barra:** ofrece dos espectros independientes en vertical; sus ajustes se actualizan en vivo igual que los demás visualizadores.
 - **Barra de carga:** resume el nivel musical en un medidor continuo personalizable.
 - **Electrocardiógrafo:** convierte ataques musicales en un trazo P–QRS–T que entra por un lado y desaparece por el opuesto.
-- La imagen, el color o el video de fondo son globales y se actualizan en las cinco pestañas.
+- **Neon Wave:** forma una silueta poligonal de nodos luminosos con ecos y chispas que reaccionan a la música.
+- La imagen, el color o el video de fondo son globales y se actualizan en las seis pestañas.
 - Cambiar de pestaña, estilo, sensibilidad, color, picos, geometría, relleno, imagen, rotación o encuadre redibuja la vista previa inmediatamente.
 - Sensibilidad, rotación, zoom y posición X/Y combinan slider y número editable para recuperar valores exactos.
 - **Analizar y previsualizar** se reserva para generar o recalcular los fotogramas musicales. Los ajustes puramente visuales no repiten la FFT.
 - FPS, cantidad de bandas, Movimiento y modo de Espectro sí requieren volver a analizar porque modifican los datos musicales.
-- Las cinco pestañas conservan configuraciones visuales independientes.
+- Las seis pestañas conservan configuraciones visuales independientes.
 
 ## Idioma, apariencia y fondo
 
@@ -267,7 +270,7 @@ El selector **Picos** también rige el modo circular: Normalizar mantiene la fre
 - **Picos — Normalizar picos:** no modifica amplitudes pequeñas; comprime progresivamente las grandes para aproximarlas al borde sin tocarlo ni formar una meseta plana.
 - **Espectro — Intercalado clásico:** reproduce el muestreo peculiar del Sonic Candle original, concentrado en frecuencias bajas y con una distribución más irregular. Requiere volver a analizar.
 
-## Limitaciones conocidas de Alpha 19
+## Limitaciones conocidas de Beta 1.0
 
 - El análisis completo se guarda en memoria; canciones extremadamente largas consumirán más RAM.
 - La reproducción previa necesita un dispositivo de salida de audio disponible en el sistema.

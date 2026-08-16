@@ -2,7 +2,7 @@
 
 An approachable Java remake and community continuation of **Sonic Candle**, built for creating customizable music visualizers without needing a full video editor.
 
-> **Current status:** Alpha 19. The core workflow is functional, but the project is still being tested and refined.
+> **Current status:** Beta 1.0. The complete core workflow is ready for community testing and feedback.
 
 [Leer en español](README_ES.md)
 
@@ -58,6 +58,10 @@ Horizontal or vertical single-level visualizer with one or two bars, reversible 
 ### Cardiogram
 
 P–QRS–T heartbeats sweep across the frame and disappear as new beats enter. **Heart rate** is the default: it behaves like a continuous monitor whose BPM rises smoothly from a resting pulse toward tachycardia as the song becomes more intense. Its optional **Adapt sweep to intensity** control switches the trace's actual advance among Normal, Fast, and Very fast while keeping a fixed visual scale, so existing beats move faster without accordion-like stretching; turning it off keeps Normal speed. **Musical hits** remains available for placing the R peak directly on detected attacks and offers manual Slow, Synchronized, and Fast sweeps. Both modes support reversible direction, sensitivity, color, and five line finishes.
+
+### Neon Wave
+
+A contained polygonal waveform made from configurable glowing nodes. Music-driven peaks leave deterministic temporal echoes that form luminous fans, while optional subtle or intense sparks react to energy and attacks. The wave supports 8–32 points, Angular, Smooth, and Rounded traces, adjustable echo count/spacing/opacity, glow strength, sensitivity, color, top/center/bottom placement, and vertical inversion.
 
 ## Export formats
 
