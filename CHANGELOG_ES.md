@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0-beta.1 — 2026-08-15
+
+- El conjunto completo de Alpha 20 pasa a **Beta 1.0**, primera versión destinada a pruebas de la comunidad.
+- El desarrollo de funciones queda temporalmente congelado mientras se recopilan pruebas reales, reportes de errores y solicitudes de presets.
+
+- Sexta pestaña **Neon Wave**, inspirada en visualizadores musicales de nodos y líneas luminosas.
+- El espectro se reduce a una silueta estable de 8 a 32 nodos; sus picos siempre permanecen contenidos dentro del video.
+- Estilos Angular, Suavizada y Redondeada, con color naranja predeterminado independiente, sensibilidad y brillo regulable entre 0 % y 200 %.
+- Posición superior, central o inferior e inversión vertical de los picos.
+- Hasta diez ecos temporales con separación en fotogramas y opacidad configurables. Los estados musicales anteriores forman abanicos luminosos deterministas en lugar de geometría aleatoria.
+- Partículas Desactivadas, Sutiles o Intensas. Las chispas nacen de la energía y los ataques musicales de forma determinista, por lo que preview y exportación coinciden fotograma a fotograma.
+- Todos los controles de Neon Wave redibujan inmediatamente la previsualización estática; Analizar y previsualizar sigue reservado para calcular y reproducir el movimiento musical real.
+- Neon Wave funciona en MP4, ProRes 4444 transparente, WebM VP9 transparente y secuencia PNG transparente.
+- Nuevas regresiones de procesamiento, determinismo, estilos, inversión, contención e interfaz bilingüe.
+- La línea recta de nodos permanece visible durante el silencio absoluto en lugar de desaparecer entre pasajes musicales.
+
 ## 2.0.0-alpha.19 — 2026-08-15
 
 - Quinta pestaña Electrocardiógrafo con pulsos musicales de silueta P–QRS–T.

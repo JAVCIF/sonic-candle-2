@@ -5,7 +5,8 @@ public enum VisualizationMode {
     CIRCULAR("Circular"),
     DUAL_BAR("Doble barra"),
     LOAD_BAR("Barra de carga"),
-    CARDIOGRAM("Electrocardiógrafo");
+    CARDIOGRAM("Electrocardiógrafo"),
+    NEON_WAVE("Neon Wave");
 
     private final String displayName;
 

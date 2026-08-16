@@ -36,6 +36,12 @@ import com.soniccandle.render.LoadBarLevelProcessor;
 import com.soniccandle.render.LoadBarOrientation;
 import com.soniccandle.render.LoadBarResponseMode;
 import com.soniccandle.render.LoadBarShape;
+import com.soniccandle.render.NeonWaveConfig;
+import com.soniccandle.render.NeonWaveLineStyle;
+import com.soniccandle.render.NeonWaveParticleMode;
+import com.soniccandle.render.NeonWavePlacement;
+import com.soniccandle.render.NeonWaveProcessor;
+import com.soniccandle.render.NeonWaveTimeline;
 import com.soniccandle.render.PeakMode;
 import com.soniccandle.render.RenderConfig;
 import com.soniccandle.render.RestingLineMode;
@@ -202,6 +208,28 @@ public final class MainFrame extends JFrame {
             createColorButton(new Color(179, 127, 255));
     private final JCheckBox cardiogramReverseCheckBox = new JCheckBox();
     private final JCheckBox cardiogramAdaptiveSweepCheckBox = new JCheckBox();
+    private final JSpinner neonPointCountSpinner = new JSpinner(
+            new SpinnerNumberModel(12, NeonWaveConfig.MIN_POINTS,
+                    NeonWaveConfig.MAX_POINTS, 1));
+    private final JComboBox<NeonWaveLineStyle> neonLineStyleBox =
+            new JComboBox<>(NeonWaveLineStyle.values());
+    private final JSpinner neonEchoCountSpinner = new JSpinner(
+            new SpinnerNumberModel(7, 0, 10, 1));
+    private final SliderNumberControl neonEchoSpacingControl =
+            new SliderNumberControl(1, 8, 2, 1);
+    private final SliderNumberControl neonEchoOpacityControl =
+            new SliderNumberControl(10, 90, 45, 1);
+    private final SliderNumberControl neonGlowControl =
+            new SliderNumberControl(0, 200, 100, 1);
+    private final JComboBox<NeonWavePlacement> neonPlacementBox =
+            new JComboBox<>(NeonWavePlacement.values());
+    private final JCheckBox neonInvertCheckBox = new JCheckBox();
+    private final JComboBox<NeonWaveParticleMode> neonParticleModeBox =
+            new JComboBox<>(NeonWaveParticleMode.values());
+    private final SliderNumberControl neonSensitivityControl =
+            new SliderNumberControl(40, 250, 100, 1);
+    private final JButton neonColorButton =
+            createColorButton(new Color(255, 91, 18));
     private final JSlider timelineSlider = new JSlider();
     private final JButton backgroundColorButton = createColorButton(new Color(28, 18, 51));
     private final JButton audioButton = new JButton();
@@ -246,6 +274,9 @@ public final class MainFrame extends JFrame {
     private CardiogramBeatMode cardiogramSignalMode;
     private float[] cardiogramSignal;
     private float[] cardiogramSweepPositions;
+    private SpectrumData neonWaveSpectrum;
+    private int neonWavePointCount = -1;
+    private NeonWaveTimeline neonWaveTimeline;
     private String analysisKey;
     private SwingWorker<Void, Integer> activeWorker;
     private final AtomicBoolean cancellationRequested = new AtomicBoolean();
@@ -292,6 +323,9 @@ public final class MainFrame extends JFrame {
         cardiogramBeatModeBox.setSelectedItem(CardiogramBeatMode.ADAPTIVE_HEART_RATE);
         cardiogramSpeedBox.setSelectedItem(CardiogramSpeedMode.SYNCHRONIZED);
         cardiogramAdaptiveSweepCheckBox.setSelected(true);
+        neonLineStyleBox.setSelectedItem(NeonWaveLineStyle.ANGULAR);
+        neonPlacementBox.setSelectedItem(NeonWavePlacement.CENTER);
+        neonParticleModeBox.setSelectedItem(NeonWaveParticleMode.SUBTLE);
         languageBox.setSelectedItem(AppLanguage.SPANISH);
         themeBox.setSelectedItem(AppTheme.MODERN);
         outputFormatBox.setSelectedItem(ExportFormat.MP4);
@@ -338,6 +372,7 @@ public final class MainFrame extends JFrame {
         setTextKey(cardiogramReverseCheckBox, "check.reverseCardiogram");
         setTextKey(cardiogramAdaptiveSweepCheckBox,
                 "check.adaptiveCardiogramSweep");
+        setTextKey(neonInvertCheckBox, "check.invertNeonWave");
 
         setTooltipKey(motionBox, "tip.motion");
         setTooltipKey(spectrumModeBox, "tip.spectrum");
@@ -385,6 +420,17 @@ public final class MainFrame extends JFrame {
                 "tip.cardiogramAdaptiveSweep");
         setTooltipKey(cardiogramSensitivityControl, "tip.cardiogramSensitivity");
         setTooltipKey(cardiogramReverseCheckBox, "tip.cardiogramReverse");
+        setTooltipKey(neonPointCountSpinner, "tip.neonPointCount");
+        setTooltipKey(neonLineStyleBox, "tip.neonLineStyle");
+        setTooltipKey(neonEchoCountSpinner, "tip.neonEchoCount");
+        setTooltipKey(neonEchoSpacingControl, "tip.neonEchoSpacing");
+        setTooltipKey(neonEchoOpacityControl, "tip.neonEchoOpacity");
+        setTooltipKey(neonGlowControl, "tip.neonGlow");
+        setTooltipKey(neonPlacementBox, "tip.neonPlacement");
+        setTooltipKey(neonInvertCheckBox, "tip.neonInvert");
+        setTooltipKey(neonParticleModeBox, "tip.neonParticles");
+        setTooltipKey(neonSensitivityControl, "tip.neonSensitivity");
+        setTooltipKey(neonColorButton, "tip.neonColor");
         setTooltipKey(playPauseButton, "tip.play");
         setTooltipKey(timelineSlider, "tip.timeline");
         setTooltipKey(outputFormatBox, "tip.outputFormat");
@@ -405,6 +451,7 @@ public final class MainFrame extends JFrame {
             loadBarShapeBox, loadBarFillStyleBox, loadBarBorderStyleBox,
             loadBarResponseBox, loadBarAnimationBox, outputFormatBox,
             cardiogramStyleBox, cardiogramBeatModeBox, cardiogramSpeedBox,
+            neonLineStyleBox, neonPlacementBox, neonParticleModeBox,
             backgroundFitBox, videoEndModeBox, languageBox, themeBox};
         for (JComboBox<?> box : boxes) {
             box.setRenderer(renderer);
@@ -424,6 +471,7 @@ public final class MainFrame extends JFrame {
         compositionTabs.setTitleAt(2, UiText.text("tab.dual"));
         compositionTabs.setTitleAt(3, UiText.text("tab.load"));
         compositionTabs.setTitleAt(4, UiText.text("tab.cardiogram"));
+        compositionTabs.setTitleAt(5, UiText.text("tab.neonWave"));
         refreshDynamicLabels();
         setStatus(statusKey, statusArguments);
         updatePlayButtonText();
@@ -584,6 +632,8 @@ public final class MainFrame extends JFrame {
         compositionTabs.addTab(UiText.text("tab.load"), scrollableTab(createLoadBarTab()));
         compositionTabs.addTab(UiText.text("tab.cardiogram"),
                 scrollableTab(createCardiogramTab()));
+        compositionTabs.addTab(UiText.text("tab.neonWave"),
+                scrollableTab(createNeonWaveTab()));
         compositionTabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         compositionTabs.setSelectedIndex(0);
         compositionTabs.setPreferredSize(new Dimension(315, 365));
@@ -618,6 +668,7 @@ public final class MainFrame extends JFrame {
         updateBarsControls(false);
         updateLoadBarControls(false);
         updateCardiogramControls(false);
+        updateNeonWaveControls(false);
         updateBackgroundVideoControls(false);
         return panel;
     }
@@ -732,6 +783,33 @@ public final class MainFrame extends JFrame {
         return panel;
     }
 
+    private JPanel createNeonWaveTab() {
+        JPanel panel = createTabPanel();
+        GridBagConstraints constraints = createTabConstraints();
+        addSectionTitle(panel, constraints, "section.neonWaveTrace");
+        addLabeled(panel, constraints, "label.pointCount", neonPointCountSpinner);
+        addLabeled(panel, constraints, "label.lineStyle", neonLineStyleBox);
+        addLabeled(panel, constraints, "label.sensitivity",
+                neonSensitivityControl);
+        addLabeled(panel, constraints, "label.color", neonColorButton);
+        addLabeled(panel, constraints, "label.placement", neonPlacementBox);
+        panel.add(neonInvertCheckBox, nextRow(constraints));
+        addSectionTitle(panel, nextRow(constraints), "section.neonEchoes");
+        addLabeled(panel, constraints, "label.echoCount", neonEchoCountSpinner);
+        addLabeled(panel, constraints, "label.echoSpacing",
+                neonEchoSpacingControl);
+        addLabeled(panel, constraints, "label.echoOpacity",
+                neonEchoOpacityControl);
+        addLabeled(panel, constraints, "label.glow", neonGlowControl);
+        addSectionTitle(panel, nextRow(constraints), "section.neonParticles");
+        addLabeled(panel, constraints, "label.particles", neonParticleModeBox);
+        JLabel note = localizedLabel("note.neonWaveContained");
+        note.putClientProperty("sonic.role", "secondary");
+        panel.add(note, nextRow(constraints));
+        finishTab(panel, constraints);
+        return panel;
+    }
+
     private static JPanel createTabPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 8, 6));
@@ -796,6 +874,7 @@ public final class MainFrame extends JFrame {
             updateBarsControls(false);
             updateLoadBarControls(false);
             updateCardiogramControls(false);
+            updateNeonWaveControls(false);
             refreshTimelineBounds();
             updatePreview();
         });
@@ -914,6 +993,24 @@ public final class MainFrame extends JFrame {
                 event -> updatePreview());
         cardiogramSensitivityControl.addChangeListener(event -> updatePreview());
         cardiogramReverseCheckBox.addActionListener(event -> updatePreview());
+        neonPointCountSpinner.addChangeListener(event -> {
+            neonWaveTimeline = null;
+            neonWaveSpectrum = null;
+            neonWavePointCount = -1;
+            updatePreview();
+        });
+        neonLineStyleBox.addActionListener(event -> updatePreview());
+        neonEchoCountSpinner.addChangeListener(event -> {
+            updateNeonWaveControls(false);
+            updatePreview();
+        });
+        neonEchoSpacingControl.addChangeListener(event -> updatePreview());
+        neonEchoOpacityControl.addChangeListener(event -> updatePreview());
+        neonGlowControl.addChangeListener(event -> updatePreview());
+        neonPlacementBox.addActionListener(event -> updatePreview());
+        neonInvertCheckBox.addActionListener(event -> updatePreview());
+        neonParticleModeBox.addActionListener(event -> updatePreview());
+        neonSensitivityControl.addChangeListener(event -> updatePreview());
         barColorButton.addActionListener(event -> chooseColor(barColorButton, "dialog.barColor"));
         circleBarColorButton.addActionListener(event -> chooseColor(
                 circleBarColorButton, "dialog.circleBarColor"));
@@ -925,6 +1022,8 @@ public final class MainFrame extends JFrame {
                 loadBarBorderColorButton, "dialog.loadBorderColor"));
         cardiogramColorButton.addActionListener(event -> chooseColor(
                 cardiogramColorButton, "dialog.cardiogramColor"));
+        neonColorButton.addActionListener(event -> chooseColor(
+                neonColorButton, "dialog.neonWaveColor"));
         outputFormatBox.addActionListener(event -> updateOutputFormat());
         backgroundFitBox.addActionListener(event -> {
             requestBackgroundVideoFrame();
@@ -1271,6 +1370,16 @@ public final class MainFrame extends JFrame {
                 (CardiogramStyle) cardiogramStyleBox.getSelectedItem(),
                 cardiogramReverseCheckBox.isSelected(),
                 cardiogramAdaptiveSweepCheckBox.isSelected());
+        NeonWaveConfig neonWaveConfig = new NeonWaveConfig(
+                (Integer) neonPointCountSpinner.getValue(),
+                (NeonWaveLineStyle) neonLineStyleBox.getSelectedItem(),
+                (Integer) neonEchoCountSpinner.getValue(),
+                neonEchoSpacingControl.getValue(),
+                neonEchoOpacityControl.getValue(),
+                neonGlowControl.getValue(),
+                (NeonWavePlacement) neonPlacementBox.getSelectedItem(),
+                neonInvertCheckBox.isSelected(),
+                (NeonWaveParticleMode) neonParticleModeBox.getSelectedItem());
         IntroAnimationConfig introConfig = switch (mode) {
             case LINEAR -> new IntroAnimationConfig(
                     (IntroAnimationMode) barsIntroModeBox.getSelectedItem(),
@@ -1316,6 +1425,13 @@ public final class MainFrame extends JFrame {
                 restingLine = RestingLineMode.DOTTED;
                 peakMode = PeakMode.SOFT_LIMIT;
             }
+            case NEON_WAVE -> {
+                visualizerColor = neonColorButton.getBackground();
+                style = BarStyle.THIN;
+                sensitivity = neonSensitivityControl.getValue() / 100f;
+                restingLine = RestingLineMode.INVISIBLE;
+                peakMode = PeakMode.SOFT_LIMIT;
+            }
             case LINEAR -> {
                 visualizerColor = barColorButton.getBackground();
                 style = (BarStyle) styleBox.getSelectedItem();
@@ -1336,7 +1452,7 @@ public final class MainFrame extends JFrame {
                 (VideoEndMode) videoEndModeBox.getSelectedItem(),
                 style, sensitivity, restingLine, peakMode,
                 mode, circularConfig, reverseBarsCheckBox.isSelected(), dualBarConfig,
-                loadBarConfig, introConfig, cardiogramConfig);
+                loadBarConfig, introConfig, cardiogramConfig, neonWaveConfig);
     }
 
     private void updatePreview() {
@@ -1361,8 +1477,14 @@ public final class MainFrame extends JFrame {
                 == VisualizationMode.CARDIOGRAM) {
             heartSignal = currentCardiogramSignal(config);
         }
+        NeonWaveTimeline currentNeonWave = null;
+        if (spectrum != null && config.visualizationMode()
+                == VisualizationMode.NEON_WAVE) {
+            currentNeonWave = currentNeonWaveTimeline(config);
+        }
         preview.showFrame(frame, config, playbackFrame, loadLevel,
-                heartSignal, spectrumFrame, cardiogramSweepPositions);
+                heartSignal, spectrumFrame, cardiogramSweepPositions,
+                currentNeonWave, spectrumFrame);
     }
 
     private void togglePreviewPlayback() {
@@ -1597,6 +1719,18 @@ public final class MainFrame extends JFrame {
         cardiogramSweepPositions = timeline.sweepPosition();
     }
 
+    private NeonWaveTimeline currentNeonWaveTimeline(RenderConfig config) {
+        int pointCount = config.neonWaveConfig().pointCount();
+        if (neonWaveTimeline == null || neonWaveSpectrum != spectrum
+                || neonWavePointCount != pointCount) {
+            neonWaveTimeline = NeonWaveProcessor.process(spectrum,
+                    config.neonWaveConfig());
+            neonWaveSpectrum = spectrum;
+            neonWavePointCount = pointCount;
+        }
+        return neonWaveTimeline;
+    }
+
     private boolean isCircularTabSelected() {
         return compositionTabs.getSelectedIndex() == 1;
     }
@@ -1613,12 +1747,17 @@ public final class MainFrame extends JFrame {
         return compositionTabs.getSelectedIndex() == 4;
     }
 
+    private boolean isNeonWaveTabSelected() {
+        return compositionTabs.getSelectedIndex() == 5;
+    }
+
     private VisualizationMode selectedVisualizationMode() {
         return switch (compositionTabs.getSelectedIndex()) {
             case 1 -> VisualizationMode.CIRCULAR;
             case 2 -> VisualizationMode.DUAL_BAR;
             case 3 -> VisualizationMode.LOAD_BAR;
             case 4 -> VisualizationMode.CARDIOGRAM;
+            case 5 -> VisualizationMode.NEON_WAVE;
             default -> VisualizationMode.LINEAR;
         };
     }
@@ -1668,6 +1807,9 @@ public final class MainFrame extends JFrame {
         cardiogramSweepPositions = null;
         cardiogramSignalSpectrum = null;
         cardiogramSignalMode = null;
+        neonWaveTimeline = null;
+        neonWaveSpectrum = null;
+        neonWavePointCount = -1;
         timelineSlider.setEnabled(false);
         playPauseButton.setEnabled(false);
         progressBar.setValue(0);
@@ -1735,6 +1877,7 @@ public final class MainFrame extends JFrame {
         updateBarsControls(busy);
         updateLoadBarControls(busy);
         updateCardiogramControls(busy);
+        updateNeonWaveControls(busy);
         updateBackgroundVideoControls(busy);
     }
 
@@ -1834,6 +1977,22 @@ public final class MainFrame extends JFrame {
         cardiogramSensitivityControl.setEnabled(cardiogram);
         cardiogramColorButton.setEnabled(cardiogram);
         cardiogramReverseCheckBox.setEnabled(cardiogram);
+    }
+
+    private void updateNeonWaveControls(boolean busy) {
+        boolean neon = !busy && isNeonWaveTabSelected();
+        neonPointCountSpinner.setEnabled(neon);
+        neonLineStyleBox.setEnabled(neon);
+        neonEchoCountSpinner.setEnabled(neon);
+        boolean echoes = neon && (Integer) neonEchoCountSpinner.getValue() > 0;
+        neonEchoSpacingControl.setEnabled(echoes);
+        neonEchoOpacityControl.setEnabled(echoes);
+        neonGlowControl.setEnabled(neon);
+        neonPlacementBox.setEnabled(neon);
+        neonInvertCheckBox.setEnabled(neon);
+        neonParticleModeBox.setEnabled(neon);
+        neonSensitivityControl.setEnabled(neon);
+        neonColorButton.setEnabled(neon);
     }
 
     private void setStatusFromWorker(String key, Object... arguments) {

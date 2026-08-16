@@ -22,6 +22,9 @@ import com.soniccandle.render.LoadBarFillStyle;
 import com.soniccandle.render.LoadBarOrientation;
 import com.soniccandle.render.LoadBarResponseMode;
 import com.soniccandle.render.LoadBarShape;
+import com.soniccandle.render.NeonWaveLineStyle;
+import com.soniccandle.render.NeonWaveParticleMode;
+import com.soniccandle.render.NeonWavePlacement;
 import com.soniccandle.render.PeakMode;
 import com.soniccandle.render.RestingLineMode;
 import com.soniccandle.render.VerticalPlacement;
@@ -46,6 +49,8 @@ public final class UiTextTest {
             LoadBarOrientation.values(), LoadBarResponseMode.values(),
             LoadBarShape.values(), CardiogramBeatMode.values(),
             CardiogramSpeedMode.values(), CardiogramStyle.values(),
+            NeonWaveLineStyle.values(), NeonWavePlacement.values(),
+            NeonWaveParticleMode.values(),
             PeakMode.values(), RestingLineMode.values(),
             VisualizationMode.values()};
         for (Enum<?>[] group : groups) {
@@ -68,7 +73,12 @@ public final class UiTextTest {
             "button.renderPng", "dialog.exportComplete", "tab.cardiogram",
             "label.beatMode", "tip.cardiogramBeatMode",
             "tip.cardiogramSpeed", "check.adaptiveCardiogramSweep",
-            "tip.cardiogramAdaptiveSweep"};
+            "tip.cardiogramAdaptiveSweep", "tab.neonWave",
+            "tip.neonPointCount", "tip.neonLineStyle",
+            "tip.neonEchoCount", "tip.neonEchoSpacing",
+            "tip.neonEchoOpacity", "tip.neonGlow", "tip.neonPlacement",
+            "tip.neonInvert", "tip.neonParticles", "tip.neonSensitivity",
+            "tip.neonColor", "note.neonWaveContained"};
         for (String key : keys) {
             assertTrue(UiText.hasText(key), "Falta una cadena bilingüe: " + key);
         }
